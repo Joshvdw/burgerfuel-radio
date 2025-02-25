@@ -1,13 +1,12 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Reference vinyl img
+  let isInitialized = false;
   const vinyl = document.getElementById("vinyl");
-  let isInitialized = false; // Track if audio is initialized
-  // Reference media
+
   var media = [
       "https://s3-us-west-2.amazonaws.com/s.cdpn.io/9473/new_year_dubstep_minimix.mp3",
     ],
-    fftSize = 1024,
-    // [32, 64, 128, 256, 512, 1024, 2048]
+    fftSize = 1024, // determines how many frequency bins are used to analyze the audio signal
+    // [32, 64, 128, 256, 512, 1024, 2048] // use one of these lower values if running into performance issues
 
     background_color = "rgba(0, 0, 1, 1)",
     background_gradient_color_1 = "#000011",
@@ -55,7 +54,6 @@ document.addEventListener("DOMContentLoaded", function () {
     startedAt,
     pausedAt,
     rotation = 0,
-    // msgElement = document.querySelector("#loading .msg"),
     avg,
     ctx,
     actx,
@@ -66,10 +64,9 @@ document.addEventListener("DOMContentLoaded", function () {
     frequencyDataLength,
     timeData;
 
-  // var startElement = document.querySelector("#loadcontrol");
-  var loadingElement = document.querySelector("#loading");
-  var msgElement = loadingElement.querySelector(".msg");
-  // var toggleElement = document.querySelector("#togglecontrol");\\
+  const textureOverlay = document.querySelector(".texture_overlay");
+  const loadingElement = document.querySelector("#loading");
+  const msgElement = loadingElement.querySelector(".msg");
 
   // Set vinyl size on initial page load
   function setVinylSize() {
@@ -79,7 +76,6 @@ document.addEventListener("DOMContentLoaded", function () {
     vinyl.style.width = initialRadius * 2.5 + "px";
     vinyl.style.height = initialRadius * 2.5 + "px";
   }
-  // Call setVinylSize on page load
   setVinylSize();
 
   window.addEventListener("load", initialize, false);
@@ -92,7 +88,6 @@ document.addEventListener("DOMContentLoaded", function () {
     actx = new AudioContext();
     document.body.appendChild(ctx.canvas);
 
-    // startElement.addEventListener("click", initializeAudio);
     // Add click event listener to vinyl
     vinyl.addEventListener("click", function (e) {
       e.preventDefault();
@@ -108,28 +103,16 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function featureNotSupported() {
-    // hideStarter();
     return (document.getElementById("no-audio").style.display = "block");
   }
-
-  // function hideStarter() {
-  //   startElement.style.display = "none";
-  // }
 
   function hideLoader() {
     return (loadingElement.className = "hide");
   }
 
-  // function showToggleControls() {
-  //   toggleElement.className = "show";
-  //   toggleElement.focus();
-
-  //   toggleElement.addEventListener("click", function (e) {
-  //     e.preventDefault();
-  //     // this.textContent = playing ? "play" : "pause";
-  //     toggleAudio();
-  //   });
-  // }
+  function showTextureOverlay() {
+    return (textureOverlay.className = "show");
+  }
 
   function updateLoadingMessage(text) {
     msgElement.textContent = text;
@@ -139,8 +122,6 @@ document.addEventListener("DOMContentLoaded", function () {
     asource = actx.createBufferSource();
     var xmlHTTP = new XMLHttpRequest();
 
-    // hideStarter();
-    // loadingElement.classList.add("show");
     updateLoadingMessage("Loading...");
 
     xmlHTTP.open("GET", media[0], true);
@@ -149,14 +130,9 @@ document.addEventListener("DOMContentLoaded", function () {
     xmlHTTP.onload = function (e) {
       updateLoadingMessage("Connecting to Radio");
 
-      // console.time("decoding audio data");
       actx.decodeAudioData(
         xmlHTTP.response,
         function (buffer) {
-          // console.timeEnd("decoding audio data");
-
-          // updateLoadingMessage("- Ready -");
-
           audio_buffer = buffer;
 
           analyser = actx.createAnalyser();
@@ -178,8 +154,9 @@ document.addEventListener("DOMContentLoaded", function () {
           createStarField();
           createPoints();
           hideLoader();
-          // showToggleControls();
+          showTextureOverlay();
           playAudio();
+
           // start spinning vinyl
           vinyl.style.animation = "rotateZ 10s linear infinite";
           vinyl.style.animationPlayState = "running";
@@ -189,17 +166,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       );
     };
-
     xmlHTTP.send();
   }
-
-  // toggle play
-  // vinyl.addEventListener("click", function (e) {
-  //   e.preventDefault();
-  //   // this.textContent = playing ? "play" : "pause"; // play, pause btn switch here
-  //   toggleVinylRotate();
-  //   toggleAudio();
-  // });
 
   function toggleAudio() {
     playing ? pauseAudio() : playAudio();
@@ -207,14 +175,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function toggleVinylRotate() {
     if (!playing) {
-      // Pause the animation and capture the current rotation
       const computedStyle = window.getComputedStyle(vinyl);
       const currentRotation =
         computedStyle.getPropertyValue("--rotation") || "0deg";
       vinyl.style.setProperty("--rotation", currentRotation);
       vinyl.style.animationPlayState = "paused";
     } else {
-      // Resume the animation from the current rotation
       vinyl.style.animationPlayState = "running";
     }
   }

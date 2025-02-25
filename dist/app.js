@@ -607,8 +607,9 @@ document.addEventListener("DOMContentLoaded", function() {
     background_color = "rgba(0, 0, 1, 1)", background_gradient_color_1 = "#000011", background_gradient_color_2 = "#060D1F", background_gradient_color_3 = "#02243F", stars_color = "#465677", stars_color_2 = "#B5BFD4", stars_color_special = "#F451BA", TOTAL_STARS = 1500, STARS_BREAK_POINT = 140, stars = [], waveform_color = "rgba(29, 36, 57, 0.05)", waveform_color_2 = "rgba(0,0,0,0)", waveform_line_color = "rgba(157, 242, 157, 0.11)", waveform_line_color_2 = "rgba(157, 242, 157, 0.8)", waveform_tick = 0.05, TOTAL_POINTS = fftSize / 2, points = [], avg_circle, bubble_avg_color = "rgba(29, 36, 57, 0.1)", bubble_avg_color_2 = "rgba(29, 36, 57, 0.05)", bubble_avg_line_color = "rgba(77, 218, 248, 1)", bubble_avg_line_color_2 = "rgba(77, 218, 248, 1)", bubble_avg_tick = 0.001, TOTAL_AVG_POINTS = 64, AVG_BREAK_POINT = 100, avg_points = [], SHOW_STAR_FIELD = true, SHOW_WAVEFORM = true, SHOW_AVERAGE = true, AudioContext = window.AudioContext || window.webkitAudioContext, floor = Math.floor, round = Math.round, random = Math.random, sin = Math.sin, cos = Math.cos, PI = Math.PI, PI_TWO = PI * 2, PI_HALF = PI / 180, w = 0, h = 0, cx = 0, cy = 0, playing = false, startedAt, pausedAt, rotation = 0, // msgElement = document.querySelector("#loading .msg"),
     avg, ctx, actx, asource, gainNode, analyser, frequencyData, frequencyDataLength, timeData;
     // var startElement = document.querySelector("#loadcontrol");
-    var loadingElement = document.querySelector("#loading");
-    var msgElement = loadingElement.querySelector(".msg");
+    const textureOverlay = document.querySelector(".texture_overlay");
+    const loadingElement = document.querySelector("#loading");
+    const msgElement = loadingElement.querySelector(".msg");
     // var toggleElement = document.querySelector("#togglecontrol");\\
     // Set vinyl size on initial page load
     function setVinylSize() {
@@ -650,6 +651,9 @@ document.addEventListener("DOMContentLoaded", function() {
     // }
     function hideLoader() {
         return loadingElement.className = "hide";
+    }
+    function showTextureOverlay() {
+        return textureOverlay.className = "show";
     }
     // function showToggleControls() {
     //   toggleElement.className = "show";
@@ -693,6 +697,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 createStarField();
                 createPoints();
                 hideLoader();
+                showTextureOverlay();
                 // showToggleControls();
                 playAudio();
                 // start spinning vinyl
