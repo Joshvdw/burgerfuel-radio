@@ -1,10 +1,15 @@
+// import { fetchDataAndUpdateDOM, fetchNowPlaying } from "./api.js";
 document.addEventListener("DOMContentLoaded", function () {
+  // Fetch data immediately upon load
+  // fetchDataAndUpdateDOM();
+
+  // const updateInterval = 15000; // Fetch data every 15 seconds
+  // setInterval(fetchDataAndUpdateDOM, updateInterval);
+
   let isInitialized = false;
   const vinyl = document.getElementById("vinyl");
 
-  var media = [
-      "https://s3-us-west-2.amazonaws.com/s.cdpn.io/9473/new_year_dubstep_minimix.mp3",
-    ],
+  var media = ["https://s3.radio.co/s9909bd65f/listen"],
     fftSize = 1024, // determines how many frequency bins are used to analyze the audio signal
     // [32, 64, 128, 256, 512, 1024, 2048] // use one of these lower values if running into performance issues
 
@@ -111,62 +116,79 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function showTextureOverlay() {
-    return (textureOverlay.className = "show");
+    textureOverlay.classList.add("show");
   }
 
   function updateLoadingMessage(text) {
     msgElement.textContent = text;
   }
 
+  function flipLoadMessages() {
+    const messages = ["...Flipping Burgers", "...Flipping Beats"];
+    let index = 0;
+
+    setInterval(() => {
+      updateLoadingMessage(messages[index]);
+      index = (index + 1) % messages.length;
+    }, 1000);
+  }
+
+  let audioElement;
+
   function initializeAudio() {
-    asource = actx.createBufferSource();
-    var xmlHTTP = new XMLHttpRequest();
+    if (!window.actx) {
+      window.actx = new (window.AudioContext || window.webkitAudioContext)();
+    }
 
-    updateLoadingMessage("Loading...");
+    if (!audioElement) {
+      audioElement = new Audio(media[0]);
+      audioElement.crossOrigin = "anonymous";
+      audioElement.loop = true;
 
-    xmlHTTP.open("GET", media[0], true);
-    xmlHTTP.responseType = "arraybuffer";
+      const track = actx.createMediaElementSource(audioElement);
+      gainNode = actx.createGain();
+      analyser = actx.createAnalyser();
 
-    xmlHTTP.onload = function (e) {
-      updateLoadingMessage("Connecting to Radio");
+      gainNode.gain.value = 1;
+      analyser.fftSize = fftSize;
+      analyser.minDecibels = -100;
+      analyser.maxDecibels = -30;
+      analyser.smoothingTimeConstant = 0.8;
 
-      actx.decodeAudioData(
-        xmlHTTP.response,
-        function (buffer) {
-          audio_buffer = buffer;
+      track.connect(gainNode);
+      gainNode.connect(analyser);
+      analyser.connect(actx.destination);
 
-          analyser = actx.createAnalyser();
-          gainNode = actx.createGain();
-          gainNode.gain.value = 1;
+      frequencyDataLength = analyser.frequencyBinCount;
+      frequencyData = new Uint8Array(frequencyDataLength);
+      timeData = new Uint8Array(frequencyDataLength);
 
-          analyser.fftSize = fftSize;
-          analyser.minDecibels = -100;
-          analyser.maxDecibels = -30;
-          analyser.smoothingTimeConstant = 0.8;
+      // Update loading message
+      updateLoadingMessage("Loading...");
+      setTimeout(() => {
+        flipLoadMessages();
+      }, 1000);
 
-          gainNode.connect(analyser);
-          analyser.connect(actx.destination);
+      // Show the texture overlay
+      createStarField();
+      createPoints();
+      // hideLoader();
+      // showTextureOverlay();
 
-          frequencyDataLength = analyser.frequencyBinCount;
-          frequencyData = new Uint8Array(frequencyDataLength);
-          timeData = new Uint8Array(frequencyDataLength);
+      audioElement.addEventListener("canplaythrough", function () {
+        // Audio is ready to be played, hide loader and show texture overlay
+        hideLoader();
+        showTextureOverlay();
 
-          createStarField();
-          createPoints();
-          hideLoader();
-          showTextureOverlay();
-          playAudio();
+        // Start spinning the vinyl
+        vinyl.style.animation = "rotateZ 10s linear infinite";
+        vinyl.style.animationPlayState = "running";
 
-          // start spinning vinyl
-          vinyl.style.animation = "rotateZ 10s linear infinite";
-          vinyl.style.animationPlayState = "running";
-        },
-        function (e) {
-          alert("Error decoding audio data" + e);
-        }
-      );
-    };
-    xmlHTTP.send();
+        // Now start playing audio
+        playAudio();
+      });
+    }
+    audioElement.load();
   }
 
   function toggleAudio() {
@@ -184,23 +206,25 @@ document.addEventListener("DOMContentLoaded", function () {
       vinyl.style.animationPlayState = "running";
     }
   }
+
   function playAudio() {
     playing = true;
-    startedAt = pausedAt ? Date.now() - pausedAt : Date.now();
-    asource = null;
-    asource = actx.createBufferSource();
-    asource.buffer = audio_buffer;
-    asource.loop = true;
-    asource.connect(gainNode);
-    pausedAt ? asource.start(0, pausedAt / 1000) : asource.start();
 
-    animate();
+    if (actx.state === "suspended") {
+      actx.resume(); // Ensure context is running
+    }
+
+    audioElement
+      .play()
+      .then(() => {
+        animate(); // Start the visualizer
+      })
+      .catch((err) => console.error("Playback error:", err));
   }
 
   function pauseAudio() {
     playing = false;
-    pausedAt = Date.now() - startedAt;
-    asource.stop();
+    audioElement.pause();
   }
 
   function getAvg(values) {

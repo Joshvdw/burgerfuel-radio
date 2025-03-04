@@ -142,14 +142,14 @@
       this[globalName] = mainExports;
     }
   }
-})({"drwwF":[function(require,module,exports,__globalThis) {
+})({"gQHg0":[function(require,module,exports,__globalThis) {
 var global = arguments[3];
 var HMR_HOST = null;
 var HMR_PORT = 50619;
 var HMR_SECURE = false;
 var HMR_ENV_HASH = "d6ea1d42532a7575";
 var HMR_USE_SSE = false;
-module.bundle.HMR_BUNDLE_ID = "138b6a135baa4167";
+module.bundle.HMR_BUNDLE_ID = "464673048a610a86";
 "use strict";
 /* global HMR_HOST, HMR_PORT, HMR_ENV_HASH, HMR_SECURE, HMR_USE_SSE, chrome, browser, __parcel__import__, __parcel__importScripts__, ServiceWorkerGlobalScope */ /*::
 import type {
@@ -595,22 +595,22 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
     }
 }
 
-},{}],"igcvL":[function(require,module,exports,__globalThis) {
+},{}],"bqCyU":[function(require,module,exports,__globalThis) {
+// import { fetchDataAndUpdateDOM, fetchNowPlaying } from "./api.js";
 document.addEventListener("DOMContentLoaded", function() {
-    // Reference vinyl img
+    // Fetch data immediately upon load
+    // fetchDataAndUpdateDOM();
+    // const updateInterval = 15000; // Fetch data every 15 seconds
+    // setInterval(fetchDataAndUpdateDOM, updateInterval);
+    let isInitialized = false;
     const vinyl = document.getElementById("vinyl");
-    let isInitialized = false; // Track if audio is initialized
-    // Reference media
     var media = [
-        "https://s3-us-west-2.amazonaws.com/s.cdpn.io/9473/new_year_dubstep_minimix.mp3"
-    ], fftSize = 1024, // [32, 64, 128, 256, 512, 1024, 2048]
-    background_color = "rgba(0, 0, 1, 1)", background_gradient_color_1 = "#000011", background_gradient_color_2 = "#060D1F", background_gradient_color_3 = "#02243F", stars_color = "#465677", stars_color_2 = "#B5BFD4", stars_color_special = "#F451BA", TOTAL_STARS = 1500, STARS_BREAK_POINT = 140, stars = [], waveform_color = "rgba(29, 36, 57, 0.05)", waveform_color_2 = "rgba(0,0,0,0)", waveform_line_color = "rgba(157, 242, 157, 0.11)", waveform_line_color_2 = "rgba(157, 242, 157, 0.8)", waveform_tick = 0.05, TOTAL_POINTS = fftSize / 2, points = [], avg_circle, bubble_avg_color = "rgba(29, 36, 57, 0.1)", bubble_avg_color_2 = "rgba(29, 36, 57, 0.05)", bubble_avg_line_color = "rgba(77, 218, 248, 1)", bubble_avg_line_color_2 = "rgba(77, 218, 248, 1)", bubble_avg_tick = 0.001, TOTAL_AVG_POINTS = 64, AVG_BREAK_POINT = 100, avg_points = [], SHOW_STAR_FIELD = true, SHOW_WAVEFORM = true, SHOW_AVERAGE = true, AudioContext = window.AudioContext || window.webkitAudioContext, floor = Math.floor, round = Math.round, random = Math.random, sin = Math.sin, cos = Math.cos, PI = Math.PI, PI_TWO = PI * 2, PI_HALF = PI / 180, w = 0, h = 0, cx = 0, cy = 0, playing = false, startedAt, pausedAt, rotation = 0, // msgElement = document.querySelector("#loading .msg"),
-    avg, ctx, actx, asource, gainNode, analyser, frequencyData, frequencyDataLength, timeData;
-    // var startElement = document.querySelector("#loadcontrol");
+        "https://s3.radio.co/s9909bd65f/listen"
+    ], fftSize = 1024, // [32, 64, 128, 256, 512, 1024, 2048] // use one of these lower values if running into performance issues
+    background_color = "rgba(0, 0, 1, 1)", background_gradient_color_1 = "#000011", background_gradient_color_2 = "#060D1F", background_gradient_color_3 = "#02243F", stars_color = "#465677", stars_color_2 = "#B5BFD4", stars_color_special = "#F451BA", TOTAL_STARS = 1500, STARS_BREAK_POINT = 140, stars = [], waveform_color = "rgba(29, 36, 57, 0.05)", waveform_color_2 = "rgba(0,0,0,0)", waveform_line_color = "rgba(157, 242, 157, 0.11)", waveform_line_color_2 = "rgba(157, 242, 157, 0.8)", waveform_tick = 0.05, TOTAL_POINTS = fftSize / 2, points = [], avg_circle, bubble_avg_color = "rgba(29, 36, 57, 0.1)", bubble_avg_color_2 = "rgba(29, 36, 57, 0.05)", bubble_avg_line_color = "rgba(77, 218, 248, 1)", bubble_avg_line_color_2 = "rgba(77, 218, 248, 1)", bubble_avg_tick = 0.001, TOTAL_AVG_POINTS = 64, AVG_BREAK_POINT = 100, avg_points = [], SHOW_STAR_FIELD = true, SHOW_WAVEFORM = true, SHOW_AVERAGE = true, AudioContext = window.AudioContext || window.webkitAudioContext, floor = Math.floor, round = Math.round, random = Math.random, sin = Math.sin, cos = Math.cos, PI = Math.PI, PI_TWO = PI * 2, PI_HALF = PI / 180, w = 0, h = 0, cx = 0, cy = 0, playing = false, startedAt, pausedAt, rotation = 0, avg, ctx, actx, asource, gainNode, analyser, frequencyData, frequencyDataLength, timeData;
     const textureOverlay = document.querySelector(".texture_overlay");
     const loadingElement = document.querySelector("#loading");
     const msgElement = loadingElement.querySelector(".msg");
-    // var toggleElement = document.querySelector("#togglecontrol");\\
     // Set vinyl size on initial page load
     function setVinylSize() {
         const initialWidth = window.innerWidth;
@@ -619,7 +619,6 @@ document.addEventListener("DOMContentLoaded", function() {
         vinyl.style.width = initialRadius * 2.5 + "px";
         vinyl.style.height = initialRadius * 2.5 + "px";
     }
-    // Call setVinylSize on page load
     setVinylSize();
     window.addEventListener("load", initialize, false);
     window.addEventListener("resize", resizeHandler, false);
@@ -628,7 +627,6 @@ document.addEventListener("DOMContentLoaded", function() {
         ctx = document.createElement("canvas").getContext("2d");
         actx = new AudioContext();
         document.body.appendChild(ctx.canvas);
-        // startElement.addEventListener("click", initializeAudio);
         // Add click event listener to vinyl
         vinyl.addEventListener("click", function(e) {
             e.preventDefault();
@@ -643,107 +641,93 @@ document.addEventListener("DOMContentLoaded", function() {
         resizeHandler();
     }
     function featureNotSupported() {
-        // hideStarter();
         return document.getElementById("no-audio").style.display = "block";
     }
-    // function hideStarter() {
-    //   startElement.style.display = "none";
-    // }
     function hideLoader() {
         return loadingElement.className = "hide";
     }
     function showTextureOverlay() {
-        return textureOverlay.className = "show";
+        textureOverlay.classList.add("show");
     }
-    // function showToggleControls() {
-    //   toggleElement.className = "show";
-    //   toggleElement.focus();
-    //   toggleElement.addEventListener("click", function (e) {
-    //     e.preventDefault();
-    //     // this.textContent = playing ? "play" : "pause";
-    //     toggleAudio();
-    //   });
-    // }
     function updateLoadingMessage(text) {
         msgElement.textContent = text;
     }
+    function flipLoadMessages() {
+        const messages = [
+            "...Flipping Burgers",
+            "...Flipping Beats"
+        ];
+        let index = 0;
+        setInterval(()=>{
+            updateLoadingMessage(messages[index]);
+            index = (index + 1) % messages.length;
+        }, 1000);
+    }
+    let audioElement;
     function initializeAudio() {
-        asource = actx.createBufferSource();
-        var xmlHTTP = new XMLHttpRequest();
-        // hideStarter();
-        // loadingElement.classList.add("show");
-        updateLoadingMessage("Loading...");
-        xmlHTTP.open("GET", media[0], true);
-        xmlHTTP.responseType = "arraybuffer";
-        xmlHTTP.onload = function(e) {
-            updateLoadingMessage("Connecting to Radio");
-            // console.time("decoding audio data");
-            actx.decodeAudioData(xmlHTTP.response, function(buffer) {
-                // console.timeEnd("decoding audio data");
-                // updateLoadingMessage("- Ready -");
-                audio_buffer = buffer;
-                analyser = actx.createAnalyser();
-                gainNode = actx.createGain();
-                gainNode.gain.value = 1;
-                analyser.fftSize = fftSize;
-                analyser.minDecibels = -100;
-                analyser.maxDecibels = -30;
-                analyser.smoothingTimeConstant = 0.8;
-                gainNode.connect(analyser);
-                analyser.connect(actx.destination);
-                frequencyDataLength = analyser.frequencyBinCount;
-                frequencyData = new Uint8Array(frequencyDataLength);
-                timeData = new Uint8Array(frequencyDataLength);
-                createStarField();
-                createPoints();
+        if (!window.actx) window.actx = new (window.AudioContext || window.webkitAudioContext)();
+        if (!audioElement) {
+            audioElement = new Audio(media[0]);
+            audioElement.crossOrigin = "anonymous";
+            audioElement.loop = true;
+            const track = actx.createMediaElementSource(audioElement);
+            gainNode = actx.createGain();
+            analyser = actx.createAnalyser();
+            gainNode.gain.value = 1;
+            analyser.fftSize = fftSize;
+            analyser.minDecibels = -100;
+            analyser.maxDecibels = -30;
+            analyser.smoothingTimeConstant = 0.8;
+            track.connect(gainNode);
+            gainNode.connect(analyser);
+            analyser.connect(actx.destination);
+            frequencyDataLength = analyser.frequencyBinCount;
+            frequencyData = new Uint8Array(frequencyDataLength);
+            timeData = new Uint8Array(frequencyDataLength);
+            // Update loading message
+            updateLoadingMessage("Loading...");
+            setTimeout(()=>{
+                flipLoadMessages();
+            }, 1000);
+            // Show the texture overlay
+            createStarField();
+            createPoints();
+            // hideLoader();
+            // showTextureOverlay();
+            audioElement.addEventListener("canplaythrough", function() {
+                // Audio is ready to be played, hide loader and show texture overlay
                 hideLoader();
                 showTextureOverlay();
-                // showToggleControls();
-                playAudio();
-                // start spinning vinyl
+                // Start spinning the vinyl
                 vinyl.style.animation = "rotateZ 10s linear infinite";
                 vinyl.style.animationPlayState = "running";
-            }, function(e) {
-                alert("Error decoding audio data" + e);
+                // Now start playing audio
+                playAudio();
             });
-        };
-        xmlHTTP.send();
+        }
+        audioElement.load();
     }
-    // toggle play
-    // vinyl.addEventListener("click", function (e) {
-    //   e.preventDefault();
-    //   // this.textContent = playing ? "play" : "pause"; // play, pause btn switch here
-    //   toggleVinylRotate();
-    //   toggleAudio();
-    // });
     function toggleAudio() {
         playing ? pauseAudio() : playAudio();
     }
     function toggleVinylRotate() {
         if (!playing) {
-            // Pause the animation and capture the current rotation
             const computedStyle = window.getComputedStyle(vinyl);
             const currentRotation = computedStyle.getPropertyValue("--rotation") || "0deg";
             vinyl.style.setProperty("--rotation", currentRotation);
             vinyl.style.animationPlayState = "paused";
-        } else // Resume the animation from the current rotation
-        vinyl.style.animationPlayState = "running";
+        } else vinyl.style.animationPlayState = "running";
     }
     function playAudio() {
         playing = true;
-        startedAt = pausedAt ? Date.now() - pausedAt : Date.now();
-        asource = null;
-        asource = actx.createBufferSource();
-        asource.buffer = audio_buffer;
-        asource.loop = true;
-        asource.connect(gainNode);
-        pausedAt ? asource.start(0, pausedAt / 1000) : asource.start();
-        animate();
+        if (actx.state === "suspended") actx.resume(); // Ensure context is running
+        audioElement.play().then(()=>{
+            animate(); // Start the visualizer
+        }).catch((err)=>console.error("Playback error:", err));
     }
     function pauseAudio() {
         playing = false;
-        pausedAt = Date.now() - startedAt;
-        asource.stop();
+        audioElement.pause();
     }
     function getAvg(values) {
         var value = 0;
@@ -955,6 +939,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
-},{}]},["drwwF","igcvL"], "igcvL", "parcelRequire94c2")
+},{}]},["gQHg0","bqCyU"], "bqCyU", "parcelRequire94c2")
 
 //# sourceMappingURL=app.js.map
