@@ -1,10 +1,10 @@
-// import { fetchDataAndUpdateDOM, fetchNowPlaying } from "./api.js";
-document.addEventListener("DOMContentLoaded", function () {
-  // Fetch data immediately upon load
-  // fetchDataAndUpdateDOM();
+import { updateTrackInfo } from "./api.js";
 
-  // const updateInterval = 15000; // Fetch data every 15 seconds
-  // setInterval(fetchDataAndUpdateDOM, updateInterval);
+document.addEventListener("DOMContentLoaded", function () {
+  
+  // update track into every 5s
+  updateTrackInfo();
+  setInterval(updateTrackInfo, 5000);
 
   let isInitialized = false;
   const vinyl = document.getElementById("vinyl");
@@ -169,11 +169,8 @@ document.addEventListener("DOMContentLoaded", function () {
         flipLoadMessages();
       }, 1000);
 
-      // Show the texture overlay
       createStarField();
       createPoints();
-      // hideLoader();
-      // showTextureOverlay();
 
       audioElement.addEventListener("canplaythrough", function () {
         // Audio is ready to be played, hide loader and show texture overlay

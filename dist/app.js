@@ -142,14 +142,14 @@
       this[globalName] = mainExports;
     }
   }
-})({"gQHg0":[function(require,module,exports,__globalThis) {
+})({"jAZzv":[function(require,module,exports,__globalThis) {
 var global = arguments[3];
 var HMR_HOST = null;
 var HMR_PORT = 50619;
 var HMR_SECURE = false;
 var HMR_ENV_HASH = "d6ea1d42532a7575";
 var HMR_USE_SSE = false;
-module.bundle.HMR_BUNDLE_ID = "464673048a610a86";
+module.bundle.HMR_BUNDLE_ID = "9136cee4904c537e";
 "use strict";
 /* global HMR_HOST, HMR_PORT, HMR_ENV_HASH, HMR_SECURE, HMR_USE_SSE, chrome, browser, __parcel__import__, __parcel__importScripts__, ServiceWorkerGlobalScope */ /*::
 import type {
@@ -595,13 +595,12 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
     }
 }
 
-},{}],"bqCyU":[function(require,module,exports,__globalThis) {
-// import { fetchDataAndUpdateDOM, fetchNowPlaying } from "./api.js";
+},{}],"9xffR":[function(require,module,exports,__globalThis) {
+var _apiJs = require("./api.js");
 document.addEventListener("DOMContentLoaded", function() {
-    // Fetch data immediately upon load
-    // fetchDataAndUpdateDOM();
-    // const updateInterval = 15000; // Fetch data every 15 seconds
-    // setInterval(fetchDataAndUpdateDOM, updateInterval);
+    // update track into every 5s
+    (0, _apiJs.updateTrackInfo)();
+    setInterval((0, _apiJs.updateTrackInfo), 5000);
     let isInitialized = false;
     const vinyl = document.getElementById("vinyl");
     var media = [
@@ -939,6 +938,119 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
-},{}]},["gQHg0","bqCyU"], "bqCyU", "parcelRequire94c2")
+},{"./api.js":"gHJ9K"}],"gHJ9K":[function(require,module,exports,__globalThis) {
+var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
+parcelHelpers.defineInteropFlag(exports);
+parcelHelpers.export(exports, "updateTrackInfo", ()=>updateTrackInfo) // api.js
+ // export const stationId = "s178759";
+ // export const apiUrl = `https://streaming.radio.co/api/v1/stations/${stationId}/now_playing`;
+ // export async function fetchNowPlaying() {
+ //   try {
+ //     const response = await fetch(apiUrl);
+ //     if (!response.ok) {
+ //       throw new Error("Network response was not ok");
+ //     }
+ //     const data = await response.json();
+ //     // Assuming the JSON returns a "track" object with title and artist
+ //     const track = data.track;
+ //     const title = track && track.title ? track.title : "No Song Playing";
+ //     const artist = track && track.artist ? track.artist : "Unknown Artist";
+ //     document.getElementById("song-title").textContent = title;
+ //     document.getElementById("artist-name").textContent = artist;
+ //   } catch (error) {
+ //     console.error("Error fetching now playing data:", error);
+ //   }
+ // }
+ // Your credentials and station ID
+ // const partnerId = "6M0b8*A8"; // Your Partner ID
+ // const partnerKey = "t*30HQdymm7L"; // Your Partner Key
+ // const stationId = "s178759"; // Your Station ID
+ // // The API URL for TuneIn AIR API
+ // const apiUrl = `https://air.radiotime.com/Playing.ashx?partnerId=${partnerId}&partnerKey=${partnerKey}&id=${stationId}`;
+ // export function fetchDataAndUpdateDOM() {
+ //   const displayTitle = document.querySelector("#song-title");
+ //   const displayArtist = document.querySelector("#artist-name");
+ //   if (displayTitle && displayArtist) {
+ //     // Fetch now playing data from your station
+ //     fetch(apiUrl)
+ //       .then((response) => {
+ //         if (!response.ok) {
+ //           throw new Error("Network response was not ok");
+ //         }
+ //         return response.json();
+ //       })
+ //       .then((data) => {
+ //         // Assuming the response includes the current song data
+ //         const track = data.track;
+ //         if (track) {
+ //           const title = track.title || "No Song Playing";
+ //           const artist = track.artist || "Unknown Artist";
+ //           displayTitle.textContent = title;
+ //           displayArtist.textContent = artist;
+ //         } else {
+ //           console.log("No track data available.");
+ //         }
+ //       })
+ //       .catch((error) => {
+ //         console.error("There was a problem with the fetch operation:", error);
+ //       });
+ //   } else {
+ //     console.error("The required DOM elements are not found.");
+ //   }
+ // }
+;
+function updateTrackInfo() {
+    const stationId = "s9909bd65f"; // Replace with your actual station ID
+    const trackNameElement = document.getElementById("song-title");
+    const artistNameElement = document.getElementById("artist-name");
+    // Fetch current track info from Radio.co API
+    fetch(`https://public.radio.co/api/v2/${stationId}/track/current`).then((response)=>response.json()).then((data)=>{
+        // console.log(data, data.data.title);
+        if (data) trackNameElement.textContent = data.data.title;
+        else console.error("Track info not available");
+    // Check if track info is available
+    // if (data && data.track && data.track.name && data.track.artist) {
+    //   // Update track name and artist in DOM
+    //   trackNameElement.textContent = data.track.name;
+    //   artistNameElement.textContent = data.track.artist;
+    // } else {
+    //   console.error("Track info not available");
+    // }
+    }).catch((error)=>{
+        console.error("Error fetching track info:", error);
+    });
+}
+
+},{"@parcel/transformer-js/src/esmodule-helpers.js":"fD7H8"}],"fD7H8":[function(require,module,exports,__globalThis) {
+exports.interopDefault = function(a) {
+    return a && a.__esModule ? a : {
+        default: a
+    };
+};
+exports.defineInteropFlag = function(a) {
+    Object.defineProperty(a, '__esModule', {
+        value: true
+    });
+};
+exports.exportAll = function(source, dest) {
+    Object.keys(source).forEach(function(key) {
+        if (key === 'default' || key === '__esModule' || Object.prototype.hasOwnProperty.call(dest, key)) return;
+        Object.defineProperty(dest, key, {
+            enumerable: true,
+            get: function() {
+                return source[key];
+            }
+        });
+    });
+    return dest;
+};
+exports.export = function(dest, destName, get) {
+    Object.defineProperty(dest, destName, {
+        enumerable: true,
+        get: get
+    });
+};
+
+},{}]},["jAZzv","9xffR"], "9xffR", "parcelRequire94c2")
 
 //# sourceMappingURL=app.js.map
