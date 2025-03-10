@@ -1,13 +1,19 @@
 import { updateTrackInfo } from "./api.js";
 
 document.addEventListener("DOMContentLoaded", function () {
-  
   // update track into every 5s
   updateTrackInfo();
   setInterval(updateTrackInfo, 5000);
 
   let isInitialized = false;
-  const vinyl = document.getElementById("vinyl");
+  const vinyl = document.querySelector(".vinyl_overlay-wrapper");
+  const playTextWrapper = document.querySelector("#playTextWrapper");
+  const playPauseBottom = document.querySelector("#playPauseBottom");
+  const playIcons = document.querySelectorAll(".play-icon");
+  const pauseIcons = document.querySelectorAll(".pause-icon");
+
+  // hide wrapper on launch
+  hidePlayTextWrapper();
 
   var media = ["https://s3.radio.co/s9909bd65f/listen"],
     fftSize = 1024, // determines how many frequency bins are used to analyze the audio signal
@@ -71,7 +77,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const textureOverlay = document.querySelector(".texture_overlay");
   const loadingElement = document.querySelector("#loading");
-  const msgElement = loadingElement.querySelector(".msg");
+  const msgElement = loadingElement.querySelector(".is-play");
 
   // Set vinyl size on initial page load
   function setVinylSize() {
@@ -90,7 +96,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!AudioContext) return featureNotSupported();
 
     ctx = document.createElement("canvas").getContext("2d");
-    actx = new AudioContext();
     document.body.appendChild(ctx.canvas);
 
     // Add click event listener to vinyl
@@ -106,6 +111,13 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     resizeHandler();
   }
+
+  // add event listener to bottom icon
+  playPauseBottom.addEventListener("click", function (e) {
+    e.preventDefault();
+    toggleAudio();
+    toggleVinylRotate();
+  });
 
   function featureNotSupported() {
     return (document.getElementById("no-audio").style.display = "block");
@@ -136,8 +148,9 @@ document.addEventListener("DOMContentLoaded", function () {
   let audioElement;
 
   function initializeAudio() {
-    if (!window.actx) {
-      window.actx = new (window.AudioContext || window.webkitAudioContext)();
+    // Create AudioContext only when initializing audio (after user interaction)
+    if (!actx) {
+      actx = new (window.AudioContext || window.webkitAudioContext)();
     }
 
     if (!audioElement) {
@@ -176,6 +189,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // Audio is ready to be played, hide loader and show texture overlay
         hideLoader();
         showTextureOverlay();
+        showPlayTextWrapper();
 
         // Start spinning the vinyl
         vinyl.style.animation = "rotateZ 10s linear infinite";
@@ -186,6 +200,40 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
     audioElement.load();
+  }
+
+  function showPlayTextWrapper() {
+    // Set initial styles
+    playTextWrapper.style.display = "flex";
+    // playTextWrapper.style.position = "fixed"; // Ensure it's positioned relative to viewport
+    // playTextWrapper.style.left = "0";
+    // playTextWrapper.style.bottom = "0"; // Position at bottom
+    playTextWrapper.style.transform = "translateX(-100%)";
+    playTextWrapper.style.transition =
+      "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
+    playTextWrapper.style.willChange = "transform"; // Optimize for animations
+
+    // Force a reflow to ensure the initial state is rendered
+    playTextWrapper.offsetHeight;
+
+    // Trigger the slide-in
+    requestAnimationFrame(() => {
+      playTextWrapper.style.transform = "translateX(0)";
+    });
+  }
+
+  function hidePlayTextWrapper() {
+    playTextWrapper.style.display = "none";
+  }
+
+  function toggleIcons(isPlay) {
+    if (isPlay) {
+      playIcons.forEach((icon) => (icon.style.display = "none"));
+      pauseIcons.forEach((icon) => (icon.style.display = "block"));
+    } else {
+      playIcons.forEach((icon) => (icon.style.display = "block"));
+      pauseIcons.forEach((icon) => (icon.style.display = "none"));
+    }
   }
 
   function toggleAudio() {
@@ -206,7 +254,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function playAudio() {
     playing = true;
-
+    toggleIcons(true);
     if (actx.state === "suspended") {
       actx.resume(); // Ensure context is running
     }
@@ -221,6 +269,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function pauseAudio() {
     playing = false;
+    toggleIcons(false);
     audioElement.pause();
   }
 

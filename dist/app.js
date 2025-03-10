@@ -142,14 +142,14 @@
       this[globalName] = mainExports;
     }
   }
-})({"jAZzv":[function(require,module,exports,__globalThis) {
+})({"bdytf":[function(require,module,exports,__globalThis) {
 var global = arguments[3];
 var HMR_HOST = null;
 var HMR_PORT = 50619;
 var HMR_SECURE = false;
 var HMR_ENV_HASH = "d6ea1d42532a7575";
 var HMR_USE_SSE = false;
-module.bundle.HMR_BUNDLE_ID = "9136cee4904c537e";
+module.bundle.HMR_BUNDLE_ID = "71eab41e11af098a";
 "use strict";
 /* global HMR_HOST, HMR_PORT, HMR_ENV_HASH, HMR_SECURE, HMR_USE_SSE, chrome, browser, __parcel__import__, __parcel__importScripts__, ServiceWorkerGlobalScope */ /*::
 import type {
@@ -595,21 +595,27 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
     }
 }
 
-},{}],"9xffR":[function(require,module,exports,__globalThis) {
+},{}],"hVwBq":[function(require,module,exports,__globalThis) {
 var _apiJs = require("./api.js");
 document.addEventListener("DOMContentLoaded", function() {
     // update track into every 5s
     (0, _apiJs.updateTrackInfo)();
     setInterval((0, _apiJs.updateTrackInfo), 5000);
     let isInitialized = false;
-    const vinyl = document.getElementById("vinyl");
+    const vinyl = document.querySelector(".vinyl_overlay-wrapper");
+    const playTextWrapper = document.querySelector("#playTextWrapper");
+    const playPauseBottom = document.querySelector("#playPauseBottom");
+    const playIcons = document.querySelectorAll(".play-icon");
+    const pauseIcons = document.querySelectorAll(".pause-icon");
+    // hide wrapper on launch
+    hidePlayTextWrapper();
     var media = [
         "https://s3.radio.co/s9909bd65f/listen"
     ], fftSize = 1024, // [32, 64, 128, 256, 512, 1024, 2048] // use one of these lower values if running into performance issues
     background_color = "rgba(0, 0, 1, 1)", background_gradient_color_1 = "#000011", background_gradient_color_2 = "#060D1F", background_gradient_color_3 = "#02243F", stars_color = "#465677", stars_color_2 = "#B5BFD4", stars_color_special = "#F451BA", TOTAL_STARS = 1500, STARS_BREAK_POINT = 140, stars = [], waveform_color = "rgba(29, 36, 57, 0.05)", waveform_color_2 = "rgba(0,0,0,0)", waveform_line_color = "rgba(157, 242, 157, 0.11)", waveform_line_color_2 = "rgba(157, 242, 157, 0.8)", waveform_tick = 0.05, TOTAL_POINTS = fftSize / 2, points = [], avg_circle, bubble_avg_color = "rgba(29, 36, 57, 0.1)", bubble_avg_color_2 = "rgba(29, 36, 57, 0.05)", bubble_avg_line_color = "rgba(77, 218, 248, 1)", bubble_avg_line_color_2 = "rgba(77, 218, 248, 1)", bubble_avg_tick = 0.001, TOTAL_AVG_POINTS = 64, AVG_BREAK_POINT = 100, avg_points = [], SHOW_STAR_FIELD = true, SHOW_WAVEFORM = true, SHOW_AVERAGE = true, AudioContext = window.AudioContext || window.webkitAudioContext, floor = Math.floor, round = Math.round, random = Math.random, sin = Math.sin, cos = Math.cos, PI = Math.PI, PI_TWO = PI * 2, PI_HALF = PI / 180, w = 0, h = 0, cx = 0, cy = 0, playing = false, startedAt, pausedAt, rotation = 0, avg, ctx, actx, asource, gainNode, analyser, frequencyData, frequencyDataLength, timeData;
     const textureOverlay = document.querySelector(".texture_overlay");
     const loadingElement = document.querySelector("#loading");
-    const msgElement = loadingElement.querySelector(".msg");
+    const msgElement = loadingElement.querySelector(".is-play");
     // Set vinyl size on initial page load
     function setVinylSize() {
         const initialWidth = window.innerWidth;
@@ -624,7 +630,6 @@ document.addEventListener("DOMContentLoaded", function() {
     function initialize() {
         if (!AudioContext) return featureNotSupported();
         ctx = document.createElement("canvas").getContext("2d");
-        actx = new AudioContext();
         document.body.appendChild(ctx.canvas);
         // Add click event listener to vinyl
         vinyl.addEventListener("click", function(e) {
@@ -639,6 +644,12 @@ document.addEventListener("DOMContentLoaded", function() {
         });
         resizeHandler();
     }
+    // add event listener to bottom icon
+    playPauseBottom.addEventListener("click", function(e) {
+        e.preventDefault();
+        toggleAudio();
+        toggleVinylRotate();
+    });
     function featureNotSupported() {
         return document.getElementById("no-audio").style.display = "block";
     }
@@ -664,7 +675,8 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     let audioElement;
     function initializeAudio() {
-        if (!window.actx) window.actx = new (window.AudioContext || window.webkitAudioContext)();
+        // Create AudioContext only when initializing audio (after user interaction)
+        if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
         if (!audioElement) {
             audioElement = new Audio(media[0]);
             audioElement.crossOrigin = "anonymous";
@@ -688,15 +700,13 @@ document.addEventListener("DOMContentLoaded", function() {
             setTimeout(()=>{
                 flipLoadMessages();
             }, 1000);
-            // Show the texture overlay
             createStarField();
             createPoints();
-            // hideLoader();
-            // showTextureOverlay();
             audioElement.addEventListener("canplaythrough", function() {
                 // Audio is ready to be played, hide loader and show texture overlay
                 hideLoader();
                 showTextureOverlay();
+                showPlayTextWrapper();
                 // Start spinning the vinyl
                 vinyl.style.animation = "rotateZ 10s linear infinite";
                 vinyl.style.animationPlayState = "running";
@@ -705,6 +715,34 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         }
         audioElement.load();
+    }
+    function showPlayTextWrapper() {
+        // Set initial styles
+        playTextWrapper.style.display = "flex";
+        // playTextWrapper.style.position = "fixed"; // Ensure it's positioned relative to viewport
+        // playTextWrapper.style.left = "0";
+        // playTextWrapper.style.bottom = "0"; // Position at bottom
+        playTextWrapper.style.transform = "translateX(-100%)";
+        playTextWrapper.style.transition = "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
+        playTextWrapper.style.willChange = "transform"; // Optimize for animations
+        // Force a reflow to ensure the initial state is rendered
+        playTextWrapper.offsetHeight;
+        // Trigger the slide-in
+        requestAnimationFrame(()=>{
+            playTextWrapper.style.transform = "translateX(0)";
+        });
+    }
+    function hidePlayTextWrapper() {
+        playTextWrapper.style.display = "none";
+    }
+    function toggleIcons(isPlay) {
+        if (isPlay) {
+            playIcons.forEach((icon)=>icon.style.display = "none");
+            pauseIcons.forEach((icon)=>icon.style.display = "block");
+        } else {
+            playIcons.forEach((icon)=>icon.style.display = "block");
+            pauseIcons.forEach((icon)=>icon.style.display = "none");
+        }
     }
     function toggleAudio() {
         playing ? pauseAudio() : playAudio();
@@ -719,6 +757,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     function playAudio() {
         playing = true;
+        toggleIcons(true);
         if (actx.state === "suspended") actx.resume(); // Ensure context is running
         audioElement.play().then(()=>{
             animate(); // Start the visualizer
@@ -726,6 +765,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     function pauseAudio() {
         playing = false;
+        toggleIcons(false);
         audioElement.pause();
     }
     function getAvg(values) {
@@ -938,84 +978,17 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
-},{"./api.js":"gHJ9K"}],"gHJ9K":[function(require,module,exports,__globalThis) {
+},{"./api.js":"jCew3"}],"jCew3":[function(require,module,exports,__globalThis) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
-parcelHelpers.export(exports, "updateTrackInfo", ()=>updateTrackInfo) // api.js
- // export const stationId = "s178759";
- // export const apiUrl = `https://streaming.radio.co/api/v1/stations/${stationId}/now_playing`;
- // export async function fetchNowPlaying() {
- //   try {
- //     const response = await fetch(apiUrl);
- //     if (!response.ok) {
- //       throw new Error("Network response was not ok");
- //     }
- //     const data = await response.json();
- //     // Assuming the JSON returns a "track" object with title and artist
- //     const track = data.track;
- //     const title = track && track.title ? track.title : "No Song Playing";
- //     const artist = track && track.artist ? track.artist : "Unknown Artist";
- //     document.getElementById("song-title").textContent = title;
- //     document.getElementById("artist-name").textContent = artist;
- //   } catch (error) {
- //     console.error("Error fetching now playing data:", error);
- //   }
- // }
- // Your credentials and station ID
- // const partnerId = "6M0b8*A8"; // Your Partner ID
- // const partnerKey = "t*30HQdymm7L"; // Your Partner Key
- // const stationId = "s178759"; // Your Station ID
- // // The API URL for TuneIn AIR API
- // const apiUrl = `https://air.radiotime.com/Playing.ashx?partnerId=${partnerId}&partnerKey=${partnerKey}&id=${stationId}`;
- // export function fetchDataAndUpdateDOM() {
- //   const displayTitle = document.querySelector("#song-title");
- //   const displayArtist = document.querySelector("#artist-name");
- //   if (displayTitle && displayArtist) {
- //     // Fetch now playing data from your station
- //     fetch(apiUrl)
- //       .then((response) => {
- //         if (!response.ok) {
- //           throw new Error("Network response was not ok");
- //         }
- //         return response.json();
- //       })
- //       .then((data) => {
- //         // Assuming the response includes the current song data
- //         const track = data.track;
- //         if (track) {
- //           const title = track.title || "No Song Playing";
- //           const artist = track.artist || "Unknown Artist";
- //           displayTitle.textContent = title;
- //           displayArtist.textContent = artist;
- //         } else {
- //           console.log("No track data available.");
- //         }
- //       })
- //       .catch((error) => {
- //         console.error("There was a problem with the fetch operation:", error);
- //       });
- //   } else {
- //     console.error("The required DOM elements are not found.");
- //   }
- // }
-;
+parcelHelpers.export(exports, "updateTrackInfo", ()=>updateTrackInfo);
 function updateTrackInfo() {
     const stationId = "s9909bd65f"; // Replace with your actual station ID
     const trackNameElement = document.getElementById("song-title");
-    const artistNameElement = document.getElementById("artist-name");
     // Fetch current track info from Radio.co API
     fetch(`https://public.radio.co/api/v2/${stationId}/track/current`).then((response)=>response.json()).then((data)=>{
-        // console.log(data, data.data.title);
         if (data) trackNameElement.textContent = data.data.title;
         else console.error("Track info not available");
-    // Check if track info is available
-    // if (data && data.track && data.track.name && data.track.artist) {
-    //   // Update track name and artist in DOM
-    //   trackNameElement.textContent = data.track.name;
-    //   artistNameElement.textContent = data.track.artist;
-    // } else {
-    //   console.error("Track info not available");
-    // }
     }).catch((error)=>{
         console.error("Error fetching track info:", error);
     });
@@ -1051,6 +1024,6 @@ exports.export = function(dest, destName, get) {
     });
 };
 
-},{}]},["jAZzv","9xffR"], "9xffR", "parcelRequire94c2")
+},{}]},["bdytf","hVwBq"], "hVwBq", "parcelRequire94c2")
 
 //# sourceMappingURL=app.js.map
