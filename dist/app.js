@@ -609,6 +609,20 @@ document.addEventListener("DOMContentLoaded", function() {
     const pauseIcons = document.querySelectorAll(".pause-icon");
     // hide wrapper on launch
     hidePlayTextWrapper();
+    // close open modal when clicking on another
+    const thumbnails = document.querySelectorAll(".article-thumbnail_wrapper");
+    const modals = document.querySelectorAll(".radio-article_modal");
+    thumbnails.forEach((thumbnail)=>{
+        thumbnail.addEventListener("click", (e)=>{
+            modals.forEach((modal)=>{
+                if (window.getComputedStyle(modal).display === "block") {
+                    // Check if clicked thumbnail contains the open modal
+                    if (thumbnail.contains(modal)) return;
+                    modal.style.display = "none";
+                }
+            });
+        });
+    });
     var media = [
         "https://s3.radio.co/s9909bd65f/listen"
     ], fftSize = 1024, // [32, 64, 128, 256, 512, 1024, 2048] // use one of these lower values if running into performance issues
@@ -719,9 +733,6 @@ document.addEventListener("DOMContentLoaded", function() {
     function showPlayTextWrapper() {
         // Set initial styles
         playTextWrapper.style.display = "flex";
-        // playTextWrapper.style.position = "fixed"; // Ensure it's positioned relative to viewport
-        // playTextWrapper.style.left = "0";
-        // playTextWrapper.style.bottom = "0"; // Position at bottom
         playTextWrapper.style.transform = "translateX(-100%)";
         playTextWrapper.style.transition = "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
         playTextWrapper.style.willChange = "transform"; // Optimize for animations
