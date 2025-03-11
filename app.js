@@ -205,9 +205,6 @@ document.addEventListener("DOMContentLoaded", function () {
   function showPlayTextWrapper() {
     // Set initial styles
     playTextWrapper.style.display = "flex";
-    // playTextWrapper.style.position = "fixed"; // Ensure it's positioned relative to viewport
-    // playTextWrapper.style.left = "0";
-    // playTextWrapper.style.bottom = "0"; // Position at bottom
     playTextWrapper.style.transform = "translateX(-100%)";
     playTextWrapper.style.transition =
       "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
