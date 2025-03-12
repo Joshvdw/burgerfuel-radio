@@ -33,6 +33,19 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
+  // copy email address to clipboard
+  const emailBtn = document.querySelector("#emailBtn");
+  const emailText = document.querySelector("#emailText");
+
+  emailBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    navigator.clipboard.writeText("radio@burgerfuel.com");
+    emailText.textContent = "Copied to clipboard!";
+    setTimeout(() => {
+      emailText.textContent = "Copy email address";
+    }, 1500);
+  });
+
   var media = ["https://s3.radio.co/s9909bd65f/listen"],
     fftSize = 1024, // determines how many frequency bins are used to analyze the audio signal
     // [32, 64, 128, 256, 512, 1024, 2048] // use one of these lower values if running into performance issues
