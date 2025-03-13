@@ -614,11 +614,18 @@ document.addEventListener("DOMContentLoaded", function() {
     const modals = document.querySelectorAll(".radio-article_modal");
     thumbnails.forEach((thumbnail)=>{
         thumbnail.addEventListener("click", (e)=>{
+            // Get the parent article item of the clicked thumbnail
+            const clickedArticleItem = thumbnail.closest(".radio-article_item");
             modals.forEach((modal)=>{
                 if (window.getComputedStyle(modal).display === "block") {
-                    // Check if clicked thumbnail contains the open modal
-                    if (thumbnail.contains(modal)) return;
-                    modal.style.display = "none";
+                    // Get the parent article item of the open modal
+                    const modalArticleItem = modal.closest(".radio-article_item");
+                    // If the open modal is not in the same article item as the clicked thumbnail
+                    if (modalArticleItem !== clickedArticleItem) {
+                        // Find and click the reset button within the open modal
+                        const resetBtn = modalArticleItem.firstElementChild;
+                        resetBtn.click();
+                    }
                 }
             });
         });
