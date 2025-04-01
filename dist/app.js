@@ -630,6 +630,53 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         });
     });
+    // init sessions swiper
+    function initSwiper() {
+        // Get all radio-article_modal elements
+        const articleModals = document.querySelectorAll(".radio-article_modal");
+        // Check if there are any article modals
+        if (articleModals.length === 0) return;
+        // Get the last radio-article_modal in the NodeList
+        const lastArticleModal = articleModals[articleModals.length - 1];
+        // Find the swiper container within the last article modal
+        const swiperContainer = lastArticleModal.querySelector(".swiper.is-sessions:not(.w-condition-invisible)");
+        if (swiperContainer) {
+            // Check if the parent modal is visible (not display: none)
+            const parentDisplay = window.getComputedStyle(lastArticleModal).display;
+            if (parentDisplay !== "none") new Swiper(swiperContainer, {
+                // spaceBetween: 180,
+                loop: true,
+                slidesPerView: 1.8,
+                loopedSlides: 3,
+                direction: "horizontal",
+                centeredSlides: false,
+                watchSlidesProgress: true,
+                // preloadImages: true,
+                // lazy: false,
+                speed: 300,
+                freeMode: true,
+                freeModeMomentum: true,
+                freeModeMomentumRatio: 0.4,
+                navigation: {
+                    nextEl: ".sessions_slider-button.is-next",
+                    prevEl: ".sessions_slider-button.is-previous"
+                },
+                breakpoints: {
+                    767: {
+                        slidesPerView: 1.6,
+                        // spaceBetween: 120,
+                        speed: 300,
+                        freeMode: true,
+                        freeModeMomentum: true,
+                        freeModeMomentumRatio: 0.4
+                    }
+                }
+            });
+            else setTimeout(initSwiper, 500); // Retry every 500ms
+        }
+    }
+    // Initial check
+    initSwiper();
     // copy email address to clipboard
     const emailBtn = document.querySelector("#emailBtn");
     const emailText = document.querySelector("#emailText");
@@ -648,15 +695,15 @@ document.addEventListener("DOMContentLoaded", function() {
     const textureOverlay = document.querySelector(".texture_overlay");
     const loadingElement = document.querySelector("#loading");
     const msgElement = loadingElement.querySelector(".is-play");
-    // Set vinyl size on initial page load
-    function setVinylSize() {
-        const initialWidth = window.innerWidth;
-        const initialHeight = window.innerHeight;
-        const initialRadius = Math.max(initialWidth, initialHeight) / 10;
-        vinyl.style.width = initialRadius * 2.5 + "px";
-        vinyl.style.height = initialRadius * 2.5 + "px";
+    function updateVinylSize() {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const initialRadius = Math.max(viewportWidth, viewportHeight) / 10;
+        const multiplier = viewportWidth <= 767 ? 3.5 : 2.5; // Double the size for mobile
+        vinyl.style.width = initialRadius * multiplier + "px";
+        vinyl.style.height = initialRadius * multiplier + "px";
     }
-    setVinylSize();
+    updateVinylSize();
     window.addEventListener("load", initialize, false);
     window.addEventListener("resize", resizeHandler, false);
     function initialize() {
@@ -986,11 +1033,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }));
         avg_circle = new AvgCircle();
         // Set vinyl img size
-        if (vinyl && avg_circle) {
-            var initialRadius = avg_circle.radius;
-            vinyl.style.width = initialRadius * 2.5 + "px";
-            vinyl.style.height = initialRadius * 2.5 + "px";
-        }
+        if (vinyl && avg_circle) updateVinylSize();
         i = null;
     }
     function resizeHandler() {
@@ -1003,7 +1046,10 @@ document.addEventListener("DOMContentLoaded", function() {
         points.forEach(function(p) {
             p.updateDynamics();
         });
-        if (avg_circle) avg_circle.update();
+        if (avg_circle) {
+            avg_circle.update();
+            updateVinylSize();
+        }
     }
 });
 
