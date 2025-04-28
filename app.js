@@ -1,26 +1,221 @@
-import { updateTrackInfo } from "./api.js";
+// import { updateTrackInfo } from "./api.js";
+// import { footerCode } from "./footer.js";
 
+// PASTE THIS INTO SITE WIDE CODE
 document.addEventListener("DOMContentLoaded", function () {
+  const isMobile = window.innerWidth < 991;
+  // Preload the audio stream
+  const audioStream = new Audio("https://s3.radio.co/s9909bd65f/listen");
+
+  // Only preload audio on screens less than 991px width
+  if (!isMobile) {
+    audioStream.preload = "auto";
+  }
+
+  /********** API CODE **********/
+  function updateTrackInfo(id) {
+    const stationId = "s9909bd65f"; // Replace with your actual station ID
+    const trackNameElement = document.getElementById(id);
+
+    // Fetch current track info from Radio.co API
+    fetch(`https://public.radio.co/api/v2/${stationId}/track/current`)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data) {
+          trackNameElement.textContent = data.data.title;
+        } else {
+          console.error("Track info not available");
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching track info:", error);
+      });
+  }
+
+  const currentPage = window.location.pathname;
+  if (currentPage === "/radio") {
+    // DON'T PASTE THIS INTO SITE WIDE CODE
+    radioPageCode(updateTrackInfo, audioStream);
+  } else {
+    if (!isMobile) footerCode(updateTrackInfo, audioStream);
+  }
+});
+
+function footerCode(updateTrackInfo, audioStream) {
   // update track into every 5s
-  updateTrackInfo();
-  setInterval(updateTrackInfo, 5000);
+  updateTrackInfo("footer-title");
+  setInterval(() => updateTrackInfo("footer-title"), 5000);
+
+  let isPlaying = false;
+  const vinylFooter = document.querySelector("#vinyl-footer-rotator");
+
+  document.querySelector("#footer-trigger").addEventListener("click", () => {
+    if (!isPlaying) {
+      audioStream
+        .play()
+        .then(() => {
+          isPlaying = true;
+          // Start spinning the vinyl
+          vinylFooter.style.animation = "rotateZ 10s linear infinite";
+          vinylFooter.style.animationPlayState = "running";
+        })
+        .catch((error) => {
+          console.error("Error playing radio stream:", error);
+        });
+    } else {
+      audioStream.pause();
+      isPlaying = false;
+      // Pause the vinyl rotation
+      const computedStyle = window.getComputedStyle(vinylFooter);
+      const currentRotation =
+        computedStyle.getPropertyValue("--rotation") || "0deg";
+      vinylFooter.style.setProperty("--rotation", currentRotation);
+      vinylFooter.style.animationPlayState = "paused";
+    }
+  });
+}
+
+// PASTE THIS INTO RADIO PAGE ONLY
+function radioPageCode(updateTrackInfo, audioStream) {
+  // Inject radio page specific CSS
+  const style = document.createElement("style");
+  style.textContent = `
+ #bars {
+  min-height: 28px;
+  width: 30px;
+  position: relative;
+}
+.bar {
+  background: #773BAD;
+  bottom: 0;
+  height: 3px;
+  position: absolute;
+  width: 3px;
+  // opacity: 80%;
+  animation: sound 0ms -800ms linear infinite alternate;
+}
+@keyframes sound {
+  0% {
+    height: 3px;
+  }
+  100% {
+    height: 28px;
+  }
+}
+.bar:nth-child(1) {
+  left: 1px;
+  animation-duration: 474ms;
+}
+.bar:nth-child(2) {
+  left: 5px;
+  animation-duration: 433ms;
+}
+.bar:nth-child(3) {
+  left: 9px;
+  animation-duration: 407ms;
+}
+.bar:nth-child(4) {
+  left: 13px;
+  animation-duration: 458ms;
+}
+.bar:nth-child(5) {
+  left: 17px;
+  animation-duration: 400ms;
+}
+.bar:nth-child(6) {
+  left: 21px;
+  animation-duration: 427ms;
+}
+.bar:nth-child(7) {
+  left: 25px;
+  animation-duration: 441ms;
+}
+
+.bounce-1 {
+	animation: bounce 2s infinite;
+	-webkit-animation: bounce 2s infinite;
+	-moz-animation: bounce 2s infinite;
+	-o-animation: bounce 2s infinite;
+}
+
+.bounce-2 {
+	animation: bounce 2s infinite 200ms;
+	-webkit-animation: bounce 2s infinite 200ms;
+	-moz-animation: bounce 2s infinite 200ms;
+	-o-animation: bounce 2s infinite 200ms;
+}
+
+.bounce-3 {
+	animation: bounce 2s infinite 400ms;
+	-webkit-animation: bounce 2s infinite 400ms;
+	-moz-animation: bounce 2s infinite 400ms;
+	-o-animation: bounce 2s infinite 400ms;
+}
+ 
+@-webkit-keyframes bounce {
+	0%, 20%, 50%, 80%, 100% {-webkit-transform: translateY(0);}	
+	40% {-webkit-transform: translateY(-20px);}
+	60% {-webkit-transform: translateY(-7.5px);}
+}
+ 
+@-moz-keyframes bounce {
+	0%, 20%, 50%, 80%, 100% {-moz-transform: translateY(0);}
+	40% {-moz-transform: translateY(-20px);}
+	60% {-moz-transform: translateY(-7.5px);}
+}
+ 
+@-o-keyframes bounce {
+	0%, 20%, 50%, 80%, 100% {-o-transform: translateY(0);}
+	40% {-o-transform: translateY(-20px);}
+	60% {-o-transform: translateY(-7.5px);}
+}
+@keyframes bounce {
+	0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+	40% {transform: translateY(-20px);}
+	60% {transform: translateY(-7.5px);}
+}
+  `;
+  document.head.appendChild(style);
+
+  // update track into every 5s
+  updateTrackInfo("song-title");
+  setInterval(() => updateTrackInfo("song-title"), 5000);
 
   let isInitialized = false;
   const vinyl = document.querySelector(".vinyl_overlay-wrapper");
+  const vinylText = document.querySelector("#vinylText");
   const playTextWrapper = document.querySelector("#playTextWrapper");
   const playPauseBottom = document.querySelector("#playPauseBottom");
   const playIcons = document.querySelectorAll(".play-icon");
   const pauseIcons = document.querySelectorAll(".pause-icon");
+  const soundBars = document.querySelectorAll(".bar");
 
   // hide wrapper on launch
   hidePlayTextWrapper();
+  // hide footer on radiopage
+  hideRadioFooter();
 
-  // close open modal when clicking on another
+  function hideRadioFooter() {
+    const footer = document.querySelector("#footer-radio");
+    footer.remove();
+  }
+
+  // CUSTOM MODAL FUNCTIONALITIES
   const thumbnails = document.querySelectorAll(".article-thumbnail_wrapper");
   const modals = document.querySelectorAll(".radio-article_modal");
+  const musicSendBtn = document.querySelector("#musicSendBtn");
+  const articleWrapper = document.querySelector("#articleWrapper");
+  const musicSendMusicBlackCover = document.querySelector("#blackCover2");
+  const articleBlackCover = document.querySelector("#blackCover");
+  const closeSendMusicModalBtn = document.querySelector("#closeSendMusicModal");
+  const loadingAnimation = document.querySelector("#loadingAnimation");
+  const closeArticleModalsBtns = document.querySelectorAll(
+    ".button.is-close.is-article"
+  );
 
   thumbnails.forEach((thumbnail) => {
-    thumbnail.addEventListener("click", (e) => {
+    thumbnail.addEventListener("click", () => {
+      articleWrapper.style.zIndex = "6";
       // Get the parent article item of the clicked thumbnail
       const clickedArticleItem = thumbnail.closest(".radio-article_item");
 
@@ -31,13 +226,39 @@ document.addEventListener("DOMContentLoaded", function () {
           // If the open modal is not in the same article item as the clicked thumbnail
           if (modalArticleItem !== clickedArticleItem) {
             // Find and click the reset button within the open modal
-            const resetBtn = modalArticleItem.firstElementChild;
+            const resetBtn = modalArticleItem.firstElementChild; // MAKE SURE RESET BTN IS THE FIRST ELEMENT CHILD OF THE MODAL ARTICLE ITEM
             resetBtn.click();
           }
         }
       });
     });
   });
+
+  musicSendBtn.addEventListener("click", () => {
+    articleWrapper.style.zIndex = "4";
+  });
+
+  musicSendMusicBlackCover.addEventListener("click", () => {
+    closeSendMusicModalBtn.click();
+  });
+
+  articleBlackCover.addEventListener("click", () => {
+    closeAllArticleModals();
+  });
+
+  // Add event listener for escape key to close the modal
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeSendMusicModalBtn.click();
+      closeAllArticleModals();
+    }
+  });
+
+  function closeAllArticleModals() {
+    closeArticleModalsBtns.forEach((resetBtn) => {
+      resetBtn.click();
+    });
+  }
 
   // init sessions swiper
   function initSwiper() {
@@ -114,8 +335,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }, 1500);
   });
 
-  var media = ["https://s3.radio.co/s9909bd65f/listen"],
-    fftSize = 1024, // determines how many frequency bins are used to analyze the audio signal
+  var media = [audioStream],
+    fftSize = 512, // determines how many frequency bins are used to analyze the audio signal
     // [32, 64, 128, 256, 512, 1024, 2048] // use one of these lower values if running into performance issues
 
     background_color = "rgba(0, 0, 1, 1)",
@@ -192,14 +413,19 @@ document.addEventListener("DOMContentLoaded", function () {
   window.addEventListener("load", initialize, false);
   window.addEventListener("resize", resizeHandler, false);
 
+  let isLoading = false;
+
   function initialize() {
     if (!AudioContext) return featureNotSupported();
 
-    ctx = document.createElement("canvas").getContext("2d");
-    document.body.appendChild(ctx.canvas);
+    const canvas = document.createElement("canvas");
+    canvas.id = "visualizer-canvas";
+    ctx = canvas.getContext("2d");
+    document.body.appendChild(canvas);
 
     // Add click event listener to vinyl
     vinyl.addEventListener("click", function (e) {
+      if (isLoading) return;
       e.preventDefault();
       if (!isInitialized) {
         initializeAudio();
@@ -224,7 +450,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function hideLoader() {
-    return (loadingElement.className = "hide");
+    return document.querySelector(".loader_wrapper-outer").remove();
   }
 
   function showTextureOverlay() {
@@ -254,7 +480,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (!audioElement) {
-      audioElement = new Audio(media[0]);
+      isLoading = true;
+      loadingAnimation.style.display = "flex";
+      // Use the audio stream's src property instead of the object itself
+      audioElement = new Audio(media[0].src);
       audioElement.crossOrigin = "anonymous";
       audioElement.loop = true;
 
@@ -286,14 +515,17 @@ document.addEventListener("DOMContentLoaded", function () {
       createPoints();
 
       audioElement.addEventListener("canplaythrough", function () {
+        setTimeout(() => {
+          isLoading = false;
+        }, 500);
         // Audio is ready to be played, hide loader and show texture overlay
         hideLoader();
         showTextureOverlay();
         showPlayTextWrapper();
 
         // Start spinning the vinyl
-        vinyl.style.animation = "rotateZ 10s linear infinite";
-        vinyl.style.animationPlayState = "running";
+        vinylText.style.animation = "rotateZ 10s linear infinite";
+        vinylText.style.animationPlayState = "running";
 
         // Now start playing audio
         playAudio();
@@ -342,10 +574,16 @@ document.addEventListener("DOMContentLoaded", function () {
       const computedStyle = window.getComputedStyle(vinyl);
       const currentRotation =
         computedStyle.getPropertyValue("--rotation") || "0deg";
-      vinyl.style.setProperty("--rotation", currentRotation);
-      vinyl.style.animationPlayState = "paused";
+      vinylText.style.setProperty("--rotation", currentRotation);
+      vinylText.style.animationPlayState = "paused";
+      soundBars.forEach((bar) => {
+        bar.style.animationPlayState = "paused";
+      });
     } else {
-      vinyl.style.animationPlayState = "running";
+      vinylText.style.animationPlayState = "running";
+      soundBars.forEach((bar) => {
+        bar.style.animationPlayState = "running";
+      });
     }
   }
 
@@ -663,8 +901,11 @@ document.addEventListener("DOMContentLoaded", function () {
     cx = w / 2;
     cy = h / 2;
 
-    ctx.canvas.width = w;
-    ctx.canvas.height = h;
+    const canvas = document.getElementById("visualizer-canvas");
+    if (canvas) {
+      canvas.width = w;
+      canvas.height = h;
+    }
 
     points.forEach(function (p) {
       p.updateDynamics();
@@ -675,4 +916,4 @@ document.addEventListener("DOMContentLoaded", function () {
       updateVinylSize();
     }
   }
-});
+}
