@@ -1,15 +1,17 @@
-// import { updateTrackInfo } from "./api.js";
-// import { footerCode } from "./footer.js";
-
 // PASTE THIS INTO SITE WIDE CODE
 document.addEventListener("DOMContentLoaded", function () {
-  const isMobile = window.innerWidth < 991;
-  // Preload the audio stream
-  const audioStream = new Audio("https://s3.radio.co/s9909bd65f/listen");
+  // Check if mobile
+  const isMobile = window.innerWidth <= 991;
 
-  // Only preload audio on screens less than 991px width
+  // Define media but ONLY preload on desktop
+  const mediaStreamURL = "https://s3.radio.co/s9909bd65f/listen";
+  let audioElement;
+
+  // Preload for desktop (helps responsiveness)
   if (!isMobile) {
-    audioStream.preload = "auto";
+    audioElement = new Audio(mediaStreamURL);
+    audioElement.crossOrigin = "anonymous";
+    audioElement.preload = "auto";
   }
 
   /********** API CODE **********/
@@ -35,13 +37,13 @@ document.addEventListener("DOMContentLoaded", function () {
   const currentPage = window.location.pathname;
   if (currentPage === "/radio") {
     // DON'T PASTE THIS INTO SITE WIDE CODE
-    radioPageCode(updateTrackInfo, audioStream);
+    radioPageCode(updateTrackInfo, audioElement, isMobile, mediaStreamURL);
   } else {
-    if (!isMobile) footerCode(updateTrackInfo, audioStream);
+    if (!isMobile) footerCode(updateTrackInfo, audioElement);
   }
 });
 
-function footerCode(updateTrackInfo, audioStream) {
+function footerCode(updateTrackInfo, audioElement) {
   // update track into every 5s
   updateTrackInfo("footer-title");
   setInterval(() => updateTrackInfo("footer-title"), 5000);
@@ -51,7 +53,7 @@ function footerCode(updateTrackInfo, audioStream) {
 
   document.querySelector("#footer-trigger").addEventListener("click", () => {
     if (!isPlaying) {
-      audioStream
+      audioElement
         .play()
         .then(() => {
           isPlaying = true;
@@ -63,7 +65,7 @@ function footerCode(updateTrackInfo, audioStream) {
           console.error("Error playing radio stream:", error);
         });
     } else {
-      audioStream.pause();
+      audioElement.pause();
       isPlaying = false;
       // Pause the vinyl rotation
       const computedStyle = window.getComputedStyle(vinylFooter);
@@ -76,7 +78,12 @@ function footerCode(updateTrackInfo, audioStream) {
 }
 
 // PASTE THIS INTO RADIO PAGE ONLY
-function radioPageCode(updateTrackInfo, audioStream) {
+function radioPageCode(
+  updateTrackInfo,
+  audioElement,
+  isMobile,
+  mediaStreamURL
+) {
   // Inject radio page specific CSS
   const style = document.createElement("style");
   style.textContent = `
@@ -335,8 +342,8 @@ function radioPageCode(updateTrackInfo, audioStream) {
     }, 1500);
   });
 
-  var media = [audioStream],
-    fftSize = 512, // determines how many frequency bins are used to analyze the audio signal
+  var media = [mediaStreamURL],
+    fftSize = isMobile ? 128 : 512, // determines how many frequency bins are used to analyze the audio signal
     // [32, 64, 128, 256, 512, 1024, 2048] // use one of these lower values if running into performance issues
 
     background_color = "rgba(0, 0, 1, 1)",
@@ -346,7 +353,7 @@ function radioPageCode(updateTrackInfo, audioStream) {
     stars_color = "#465677",
     stars_color_2 = "#B5BFD4",
     stars_color_special = "#F451BA",
-    TOTAL_STARS = 1500,
+    TOTAL_STARS = isMobile ? 500 : 1500,
     STARS_BREAK_POINT = 140,
     stars = [],
     waveform_color = "rgba(29, 36, 57, 0.05)",
@@ -411,7 +418,9 @@ function radioPageCode(updateTrackInfo, audioStream) {
   updateVinylSize();
 
   window.addEventListener("load", initialize, false);
-  window.addEventListener("resize", resizeHandler, false);
+  if (!isMobile) {
+    window.addEventListener("resize", resizeHandler, false);
+  }
 
   let isLoading = false;
 
@@ -430,12 +439,153 @@ function radioPageCode(updateTrackInfo, audioStream) {
       if (!isInitialized) {
         initializeAudio();
         isInitialized = true;
+
+        // Mobile needs immediate play attempt
+        // if (isMobile) toggleAudio();
       } else {
         toggleAudio();
         toggleVinylRotate();
       }
     });
     resizeHandler();
+  }
+
+  function initializeAudio() {
+    // Create AudioContext only when initializing audio (after user interaction)
+    if (!actx) {
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    isLoading = true;
+    loadingAnimation.style.display = "flex";
+
+    // For iOS, create an oscillator node as a workaround
+    if (isMobile) {
+      // Create a silent oscillator to keep the audio context active
+      const oscillator = actx.createOscillator();
+      oscillator.frequency.value = 0; // Silent
+
+      // Create a gain node with zero gain (completely silent)
+      const silentGain = actx.createGain();
+      silentGain.gain.value = 0;
+
+      // Connect but keep silent
+      oscillator.connect(silentGain);
+      silentGain.connect(actx.destination);
+      oscillator.start();
+
+      // Then continue with normal setup
+    }
+
+    if (isMobile && !audioElement) {
+      audioElement = new Audio(mediaStreamURL);
+      audioElement.crossOrigin = "anonymous";
+      audioElement.preload = "auto"; // Changed from 'none' to 'auto'
+      audioElement.autoplay = false;
+      audioElement.playsInline = true;
+      audioElement.src = mediaStreamURL;
+    }
+
+    const track = actx.createMediaElementSource(audioElement);
+    gainNode = actx.createGain();
+    analyser = actx.createAnalyser();
+
+    gainNode.gain.value = 1;
+    analyser.fftSize = fftSize;
+    analyser.minDecibels = -100;
+    analyser.maxDecibels = -30;
+    analyser.smoothingTimeConstant = 0.8;
+
+    track.connect(gainNode);
+    gainNode.connect(analyser);
+    analyser.connect(actx.destination);
+
+    frequencyDataLength = analyser.frequencyBinCount;
+    frequencyData = new Uint8Array(frequencyDataLength);
+    timeData = new Uint8Array(frequencyDataLength);
+
+    // Update loading message
+    updateLoadingMessage("Loading...");
+    setTimeout(flipLoadMessages, 1000);
+
+    createStarField();
+    createPoints();
+
+    const handleReady = () => {
+      setTimeout(() => {
+        isLoading = false;
+      }, 500);
+      // Audio is ready to be played, hide loader and show texture overlay
+      hideLoader();
+      showTextureOverlay();
+      showPlayTextWrapper();
+
+      // Start spinning the vinyl
+      vinylText.style.animation = "rotateZ 10s linear infinite";
+      vinylText.style.animationPlayState = "running";
+
+      // Now start playing the audio (on desktop only)
+      // if (!isMobile) playAudio();
+      playAudio();
+    };
+
+    if (isMobile) {
+      // Mobile: Use timeout fallback (3s) since canplaythrough is unreliable
+      const mobileReadyTimeout = setTimeout(handleReady, 3000);
+      // Still try canplaythrough in case it works
+      audioElement.addEventListener("canplaythrough", () => {
+        clearTimeout(mobileReadyTimeout);
+        handleReady();
+      });
+    } else {
+      audioElement.addEventListener("canplaythrough", handleReady);
+    }
+  }
+
+  // original playAudio function
+  // function playAudio() {
+  //   playing = true;
+  //   toggleIcons(true);
+  //   if (actx.state === "suspended") {
+  //     actx.resume(); // Ensure context is running
+  //   }
+
+  //   audioElement
+  //     .play()
+  //     .then(() => {
+  //       animate(); // Start the visualizer
+  //     })
+  //     .catch((err) => console.error("Playback error:", err));
+  // }
+
+  async function playAudio() {
+    try {
+      if (isMobile && !audioElement.src) {
+        audioElement.src = mediaStreamURL; // ← Critical for iOS compliance
+      }
+      // Critical for iOS: resume if suspended
+      if (actx.state === "suspended") {
+        await actx.resume();
+      }
+
+      playing = true;
+      toggleIcons(true);
+      await audioElement.play();
+      animate();
+    } catch (err) {
+      console.error("Playback failed:", err);
+      // isLoading = false;
+
+      // // Mobile-friendly retry prompt
+      // if (isMobile) {
+      //   updateLoadingMessage("Tap to retry...");
+      // }
+    }
+  }
+
+  function pauseAudio() {
+    playing = false;
+    toggleIcons(false);
+    audioElement.pause();
   }
 
   // add event listener to bottom icon
@@ -469,69 +619,6 @@ function radioPageCode(updateTrackInfo, audioStream) {
       updateLoadingMessage(messages[index]);
       index = (index + 1) % messages.length;
     }, 1000);
-  }
-
-  let audioElement;
-
-  function initializeAudio() {
-    // Create AudioContext only when initializing audio (after user interaction)
-    if (!actx) {
-      actx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-
-    if (!audioElement) {
-      isLoading = true;
-      loadingAnimation.style.display = "flex";
-      // Use the audio stream's src property instead of the object itself
-      audioElement = new Audio(media[0].src);
-      audioElement.crossOrigin = "anonymous";
-      audioElement.loop = true;
-
-      const track = actx.createMediaElementSource(audioElement);
-      gainNode = actx.createGain();
-      analyser = actx.createAnalyser();
-
-      gainNode.gain.value = 1;
-      analyser.fftSize = fftSize;
-      analyser.minDecibels = -100;
-      analyser.maxDecibels = -30;
-      analyser.smoothingTimeConstant = 0.8;
-
-      track.connect(gainNode);
-      gainNode.connect(analyser);
-      analyser.connect(actx.destination);
-
-      frequencyDataLength = analyser.frequencyBinCount;
-      frequencyData = new Uint8Array(frequencyDataLength);
-      timeData = new Uint8Array(frequencyDataLength);
-
-      // Update loading message
-      updateLoadingMessage("Loading...");
-      setTimeout(() => {
-        flipLoadMessages();
-      }, 1000);
-
-      createStarField();
-      createPoints();
-
-      audioElement.addEventListener("canplaythrough", function () {
-        setTimeout(() => {
-          isLoading = false;
-        }, 500);
-        // Audio is ready to be played, hide loader and show texture overlay
-        hideLoader();
-        showTextureOverlay();
-        showPlayTextWrapper();
-
-        // Start spinning the vinyl
-        vinylText.style.animation = "rotateZ 10s linear infinite";
-        vinylText.style.animationPlayState = "running";
-
-        // Now start playing audio
-        playAudio();
-      });
-    }
-    audioElement.load();
   }
 
   function showPlayTextWrapper() {
@@ -585,27 +672,6 @@ function radioPageCode(updateTrackInfo, audioStream) {
         bar.style.animationPlayState = "running";
       });
     }
-  }
-
-  function playAudio() {
-    playing = true;
-    toggleIcons(true);
-    if (actx.state === "suspended") {
-      actx.resume(); // Ensure context is running
-    }
-
-    audioElement
-      .play()
-      .then(() => {
-        animate(); // Start the visualizer
-      })
-      .catch((err) => console.error("Playback error:", err));
-  }
-
-  function pauseAudio() {
-    playing = false;
-    toggleIcons(false);
-    audioElement.pause();
   }
 
   function getAvg(values) {

@@ -596,15 +596,19 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
 }
 
 },{}],"hVwBq":[function(require,module,exports,__globalThis) {
-// import { updateTrackInfo } from "./api.js";
-// import { footerCode } from "./footer.js";
 // PASTE THIS INTO SITE WIDE CODE
 document.addEventListener("DOMContentLoaded", function() {
-    const isMobile = window.innerWidth < 991;
-    // Preload the audio stream
-    const audioStream = new Audio("https://s3.radio.co/s9909bd65f/listen");
-    // Only preload audio on screens less than 991px width
-    if (!isMobile) audioStream.preload = "auto";
+    // Check if mobile
+    const isMobile = window.innerWidth <= 991;
+    // Define media but ONLY preload on desktop
+    const mediaStreamURL = "https://s3.radio.co/s9909bd65f/listen";
+    let audioElement;
+    // Preload for desktop (helps responsiveness)
+    if (!isMobile) {
+        audioElement = new Audio(mediaStreamURL);
+        audioElement.crossOrigin = "anonymous";
+        audioElement.preload = "auto";
+    }
     /********** API CODE **********/ function updateTrackInfo(id) {
         const stationId = "s9909bd65f"; // Replace with your actual station ID
         const trackNameElement = document.getElementById(id);
@@ -618,17 +622,17 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     const currentPage = window.location.pathname;
     if (currentPage === "/radio") // DON'T PASTE THIS INTO SITE WIDE CODE
-    radioPageCode(updateTrackInfo, audioStream);
-    else if (!isMobile) footerCode(updateTrackInfo, audioStream);
+    radioPageCode(updateTrackInfo, audioElement, isMobile, mediaStreamURL);
+    else if (!isMobile) footerCode(updateTrackInfo, audioElement);
 });
-function footerCode(updateTrackInfo, audioStream) {
+function footerCode(updateTrackInfo, audioElement) {
     // update track into every 5s
     updateTrackInfo("footer-title");
     setInterval(()=>updateTrackInfo("footer-title"), 5000);
     let isPlaying = false;
     const vinylFooter = document.querySelector("#vinyl-footer-rotator");
     document.querySelector("#footer-trigger").addEventListener("click", ()=>{
-        if (!isPlaying) audioStream.play().then(()=>{
+        if (!isPlaying) audioElement.play().then(()=>{
             isPlaying = true;
             // Start spinning the vinyl
             vinylFooter.style.animation = "rotateZ 10s linear infinite";
@@ -637,7 +641,7 @@ function footerCode(updateTrackInfo, audioStream) {
             console.error("Error playing radio stream:", error);
         });
         else {
-            audioStream.pause();
+            audioElement.pause();
             isPlaying = false;
             // Pause the vinyl rotation
             const computedStyle = window.getComputedStyle(vinylFooter);
@@ -648,7 +652,7 @@ function footerCode(updateTrackInfo, audioStream) {
     });
 }
 // PASTE THIS INTO RADIO PAGE ONLY
-function radioPageCode(updateTrackInfo, audioStream) {
+function radioPageCode(updateTrackInfo, audioElement, isMobile, mediaStreamURL) {
     // Inject radio page specific CSS
     const style = document.createElement("style");
     style.textContent = `
@@ -876,9 +880,9 @@ function radioPageCode(updateTrackInfo, audioStream) {
         }, 1500);
     });
     var media = [
-        audioStream
-    ], fftSize = 512, // [32, 64, 128, 256, 512, 1024, 2048] // use one of these lower values if running into performance issues
-    background_color = "rgba(0, 0, 1, 1)", background_gradient_color_1 = "#000011", background_gradient_color_2 = "#060D1F", background_gradient_color_3 = "#02243F", stars_color = "#465677", stars_color_2 = "#B5BFD4", stars_color_special = "#F451BA", TOTAL_STARS = 1500, STARS_BREAK_POINT = 140, stars = [], waveform_color = "rgba(29, 36, 57, 0.05)", waveform_color_2 = "rgba(0,0,0,0)", waveform_line_color = "rgba(157, 242, 157, 0.11)", waveform_line_color_2 = "rgba(157, 242, 157, 0.8)", waveform_tick = 0.05, TOTAL_POINTS = fftSize / 2, points = [], avg_circle, bubble_avg_color = "rgba(29, 36, 57, 0.1)", bubble_avg_color_2 = "rgba(29, 36, 57, 0.05)", bubble_avg_line_color = "rgba(77, 218, 248, 1)", bubble_avg_line_color_2 = "rgba(77, 218, 248, 1)", bubble_avg_tick = 0.001, TOTAL_AVG_POINTS = 64, AVG_BREAK_POINT = 100, avg_points = [], SHOW_STAR_FIELD = true, SHOW_WAVEFORM = true, SHOW_AVERAGE = true, AudioContext = window.AudioContext || window.webkitAudioContext, floor = Math.floor, round = Math.round, random = Math.random, sin = Math.sin, cos = Math.cos, PI = Math.PI, PI_TWO = PI * 2, PI_HALF = PI / 180, w = 0, h = 0, cx = 0, cy = 0, playing = false, startedAt, pausedAt, rotation = 0, avg, ctx, actx, asource, gainNode, analyser, frequencyData, frequencyDataLength, timeData;
+        mediaStreamURL
+    ], fftSize = isMobile ? 128 : 512, // [32, 64, 128, 256, 512, 1024, 2048] // use one of these lower values if running into performance issues
+    background_color = "rgba(0, 0, 1, 1)", background_gradient_color_1 = "#000011", background_gradient_color_2 = "#060D1F", background_gradient_color_3 = "#02243F", stars_color = "#465677", stars_color_2 = "#B5BFD4", stars_color_special = "#F451BA", TOTAL_STARS = isMobile ? 500 : 1500, STARS_BREAK_POINT = 140, stars = [], waveform_color = "rgba(29, 36, 57, 0.05)", waveform_color_2 = "rgba(0,0,0,0)", waveform_line_color = "rgba(157, 242, 157, 0.11)", waveform_line_color_2 = "rgba(157, 242, 157, 0.8)", waveform_tick = 0.05, TOTAL_POINTS = fftSize / 2, points = [], avg_circle, bubble_avg_color = "rgba(29, 36, 57, 0.1)", bubble_avg_color_2 = "rgba(29, 36, 57, 0.05)", bubble_avg_line_color = "rgba(77, 218, 248, 1)", bubble_avg_line_color_2 = "rgba(77, 218, 248, 1)", bubble_avg_tick = 0.001, TOTAL_AVG_POINTS = 64, AVG_BREAK_POINT = 100, avg_points = [], SHOW_STAR_FIELD = true, SHOW_WAVEFORM = true, SHOW_AVERAGE = true, AudioContext = window.AudioContext || window.webkitAudioContext, floor = Math.floor, round = Math.round, random = Math.random, sin = Math.sin, cos = Math.cos, PI = Math.PI, PI_TWO = PI * 2, PI_HALF = PI / 180, w = 0, h = 0, cx = 0, cy = 0, playing = false, startedAt, pausedAt, rotation = 0, avg, ctx, actx, asource, gainNode, analyser, frequencyData, frequencyDataLength, timeData;
     const textureOverlay = document.querySelector(".texture_overlay");
     const loadingElement = document.querySelector("#loading");
     const msgElement = loadingElement.querySelector(".is-play");
@@ -892,7 +896,7 @@ function radioPageCode(updateTrackInfo, audioStream) {
     }
     updateVinylSize();
     window.addEventListener("load", initialize, false);
-    window.addEventListener("resize", resizeHandler, false);
+    if (!isMobile) window.addEventListener("resize", resizeHandler, false);
     let isLoading = false;
     function initialize() {
         if (!AudioContext) return featureNotSupported();
@@ -907,12 +911,121 @@ function radioPageCode(updateTrackInfo, audioStream) {
             if (!isInitialized) {
                 initializeAudio();
                 isInitialized = true;
+            // Mobile needs immediate play attempt
+            // if (isMobile) toggleAudio();
             } else {
                 toggleAudio();
                 toggleVinylRotate();
             }
         });
         resizeHandler();
+    }
+    function initializeAudio() {
+        // Create AudioContext only when initializing audio (after user interaction)
+        if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+        isLoading = true;
+        loadingAnimation.style.display = "flex";
+        // For iOS, create an oscillator node as a workaround
+        if (isMobile) {
+            // Create a silent oscillator to keep the audio context active
+            const oscillator = actx.createOscillator();
+            oscillator.frequency.value = 0; // Silent
+            // Create a gain node with zero gain (completely silent)
+            const silentGain = actx.createGain();
+            silentGain.gain.value = 0;
+            // Connect but keep silent
+            oscillator.connect(silentGain);
+            silentGain.connect(actx.destination);
+            oscillator.start();
+        }
+        if (isMobile && !audioElement) {
+            audioElement = new Audio(mediaStreamURL);
+            audioElement.crossOrigin = "anonymous";
+            audioElement.preload = "auto"; // Changed from 'none' to 'auto'
+            audioElement.autoplay = false;
+            audioElement.playsInline = true;
+            audioElement.src = mediaStreamURL;
+        }
+        const track = actx.createMediaElementSource(audioElement);
+        gainNode = actx.createGain();
+        analyser = actx.createAnalyser();
+        gainNode.gain.value = 1;
+        analyser.fftSize = fftSize;
+        analyser.minDecibels = -90;
+        analyser.maxDecibels = -30;
+        analyser.smoothingTimeConstant = isMobile ? 0.6 : 0.8; // Faster response on mobile
+        track.connect(gainNode);
+        gainNode.connect(analyser);
+        analyser.connect(actx.destination);
+        frequencyDataLength = analyser.frequencyBinCount;
+        frequencyData = new Uint8Array(frequencyDataLength);
+        timeData = new Uint8Array(frequencyDataLength);
+        // Update loading message
+        updateLoadingMessage("Loading...");
+        setTimeout(flipLoadMessages, 1000);
+        createStarField();
+        createPoints();
+        const handleReady = ()=>{
+            setTimeout(()=>{
+                isLoading = false;
+            }, 500);
+            // Audio is ready to be played, hide loader and show texture overlay
+            hideLoader();
+            showTextureOverlay();
+            showPlayTextWrapper();
+            // Start spinning the vinyl
+            vinylText.style.animation = "rotateZ 10s linear infinite";
+            vinylText.style.animationPlayState = "running";
+            // Now start playing the audio (on desktop only)
+            // if (!isMobile) playAudio();
+            playAudio();
+        };
+        if (isMobile) {
+            // Mobile: Use timeout fallback (3s) since canplaythrough is unreliable
+            const mobileReadyTimeout = setTimeout(handleReady, 3000);
+            // Still try canplaythrough in case it works
+            audioElement.addEventListener("canplaythrough", ()=>{
+                clearTimeout(mobileReadyTimeout);
+                handleReady();
+            });
+        } else audioElement.addEventListener("canplaythrough", handleReady);
+    }
+    // original playAudio function
+    // function playAudio() {
+    //   playing = true;
+    //   toggleIcons(true);
+    //   if (actx.state === "suspended") {
+    //     actx.resume(); // Ensure context is running
+    //   }
+    //   audioElement
+    //     .play()
+    //     .then(() => {
+    //       animate(); // Start the visualizer
+    //     })
+    //     .catch((err) => console.error("Playback error:", err));
+    // }
+    async function playAudio() {
+        try {
+            if (isMobile && !audioElement.src) audioElement.src = mediaStreamURL; // ← Critical for iOS compliance
+            // Critical for iOS: resume if suspended
+            if (actx.state === "suspended") await actx.resume();
+            playing = true;
+            toggleIcons(true);
+            await audioElement.play();
+            animate();
+        } catch (err) {
+            console.error("Playback failed:", err);
+        // isLoading = false;
+        // // Mobile-friendly retry prompt
+        // if (isMobile) {
+        //   updateLoadingMessage("Tap to retry...");
+        // }
+        }
+    }
+    function pauseAudio() {
+        playing = false;
+        toggleIcons(false);
+        audioElement.pause();
     }
     // add event listener to bottom icon
     playPauseBottom.addEventListener("click", function(e) {
@@ -942,55 +1055,6 @@ function radioPageCode(updateTrackInfo, audioStream) {
             updateLoadingMessage(messages[index]);
             index = (index + 1) % messages.length;
         }, 1000);
-    }
-    let audioElement;
-    function initializeAudio() {
-        // Create AudioContext only when initializing audio (after user interaction)
-        if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
-        if (!audioElement) {
-            isLoading = true;
-            loadingAnimation.style.display = "flex";
-            // Use the audio stream's src property instead of the object itself
-            audioElement = new Audio(media[0].src);
-            audioElement.crossOrigin = "anonymous";
-            audioElement.loop = true;
-            const track = actx.createMediaElementSource(audioElement);
-            gainNode = actx.createGain();
-            analyser = actx.createAnalyser();
-            gainNode.gain.value = 1;
-            analyser.fftSize = fftSize;
-            analyser.minDecibels = -100;
-            analyser.maxDecibels = -30;
-            analyser.smoothingTimeConstant = 0.8;
-            track.connect(gainNode);
-            gainNode.connect(analyser);
-            analyser.connect(actx.destination);
-            frequencyDataLength = analyser.frequencyBinCount;
-            frequencyData = new Uint8Array(frequencyDataLength);
-            timeData = new Uint8Array(frequencyDataLength);
-            // Update loading message
-            updateLoadingMessage("Loading...");
-            setTimeout(()=>{
-                flipLoadMessages();
-            }, 1000);
-            createStarField();
-            createPoints();
-            audioElement.addEventListener("canplaythrough", function() {
-                setTimeout(()=>{
-                    isLoading = false;
-                }, 500);
-                // Audio is ready to be played, hide loader and show texture overlay
-                hideLoader();
-                showTextureOverlay();
-                showPlayTextWrapper();
-                // Start spinning the vinyl
-                vinylText.style.animation = "rotateZ 10s linear infinite";
-                vinylText.style.animationPlayState = "running";
-                // Now start playing audio
-                playAudio();
-            });
-        }
-        audioElement.load();
     }
     function showPlayTextWrapper() {
         // Set initial styles
@@ -1036,19 +1100,6 @@ function radioPageCode(updateTrackInfo, audioStream) {
             });
         }
     }
-    function playAudio() {
-        playing = true;
-        toggleIcons(true);
-        if (actx.state === "suspended") actx.resume(); // Ensure context is running
-        audioElement.play().then(()=>{
-            animate(); // Start the visualizer
-        }).catch((err)=>console.error("Playback error:", err));
-    }
-    function pauseAudio() {
-        playing = false;
-        toggleIcons(false);
-        audioElement.pause();
-    }
     function getAvg(values) {
         var value = 0;
         values.forEach(function(v) {
@@ -1061,7 +1112,8 @@ function radioPageCode(updateTrackInfo, audioStream) {
         window.requestAnimationFrame(animate);
         analyser.getByteFrequencyData(frequencyData);
         analyser.getByteTimeDomainData(timeData);
-        avg = getAvg([].slice.call(frequencyData)) * gainNode.gain.value;
+        // old way
+        // avg = getAvg([].slice.call(frequencyData)) * gainNode.gain.value;
         AVG_BREAK_POINT_HIT = avg > AVG_BREAK_POINT;
         clearCanvas();
         if (SHOW_STAR_FIELD) drawStarField();
