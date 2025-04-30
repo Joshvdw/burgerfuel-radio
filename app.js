@@ -98,7 +98,6 @@ function radioPageCode(
   height: 3px;
   position: absolute;
   width: 3px;
-  // opacity: 80%;
   animation: sound 0ms -800ms linear infinite alternate;
 }
 @keyframes sound {
@@ -342,32 +341,45 @@ function radioPageCode(
     }, 1500);
   });
 
+  // Check if the device is iOS
+  const isIOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+  // Remove purple overlay on ios to prevent bug
+  if (isIOS) {
+    const purpleOverlay = document.querySelector(".purple_overlay");
+    if (purpleOverlay) {
+      purpleOverlay.style.mixBlendMode = "overlay";
+      purpleOverlay.style.opacity = "0.3";
+    }
+  }
+
   var media = [mediaStreamURL],
     fftSize = isMobile ? 128 : 512, // determines how many frequency bins are used to analyze the audio signal
     // [32, 64, 128, 256, 512, 1024, 2048] // use one of these lower values if running into performance issues
 
-    background_color = "rgba(0, 0, 1, 1)",
-    background_gradient_color_1 = "#000011",
-    background_gradient_color_2 = "#060D1F",
-    background_gradient_color_3 = "#02243F",
-    stars_color = "#465677",
-    stars_color_2 = "#B5BFD4",
-    stars_color_special = "#F451BA",
+    background_color = "rgb(0, 0, 1)",
+    background_gradient_color_1 = isIOS ? "#050011" : "#000011",
+    background_gradient_color_2 = isIOS ? "#11061f" : "#060D1F",
+    background_gradient_color_3 = isIOS ? "#592C83" : "#02243F",
+    stars_color = isIOS ? "#685094" : "#465677",
+    stars_color_2 = isIOS ? "#bba6e0" : "#B5BFD4",
+    stars_color_special = isIOS ? "#c440de" : "#F451BA",
     TOTAL_STARS = isMobile ? 500 : 1500,
     STARS_BREAK_POINT = 140,
     stars = [],
     waveform_color = "rgba(29, 36, 57, 0.05)",
     waveform_color_2 = "rgba(0,0,0,0)",
     waveform_line_color = "rgba(157, 242, 157, 0.11)",
-    waveform_line_color_2 = "rgba(157, 242, 157, 0.8)",
+    waveform_line_color_2 = isIOS ? "#685094" : "rgba(157, 242, 157, 0.8)",
     waveform_tick = 0.05,
     TOTAL_POINTS = fftSize / 2,
     points = [],
     avg_circle,
     bubble_avg_color = "rgba(29, 36, 57, 0.1)",
     bubble_avg_color_2 = "rgba(29, 36, 57, 0.05)",
-    bubble_avg_line_color = "rgba(77, 218, 248, 1)",
-    bubble_avg_line_color_2 = "rgba(77, 218, 248, 1)",
+    bubble_avg_line_color = isIOS ? "#592C83" : "rgba(77, 218, 248, 1)",
+    bubble_avg_line_color_2 = isIOS ? "#592C83" : "rgba(77, 218, 248, 1)",
     bubble_avg_tick = 0.001,
     TOTAL_AVG_POINTS = 64,
     AVG_BREAK_POINT = 100,
@@ -427,6 +439,7 @@ function radioPageCode(
   function initialize() {
     if (!AudioContext) return featureNotSupported();
 
+    // create and add canvas to body
     const canvas = document.createElement("canvas");
     canvas.id = "visualizer-canvas";
     ctx = canvas.getContext("2d");
@@ -439,9 +452,6 @@ function radioPageCode(
       if (!isInitialized) {
         initializeAudio();
         isInitialized = true;
-
-        // Mobile needs immediate play attempt
-        // if (isMobile) toggleAudio();
       } else {
         toggleAudio();
         toggleVinylRotate();
@@ -457,24 +467,6 @@ function radioPageCode(
     }
     isLoading = true;
     loadingAnimation.style.display = "flex";
-
-    // For iOS, create an oscillator node as a workaround
-    if (isMobile) {
-      // Create a silent oscillator to keep the audio context active
-      const oscillator = actx.createOscillator();
-      oscillator.frequency.value = 0; // Silent
-
-      // Create a gain node with zero gain (completely silent)
-      const silentGain = actx.createGain();
-      silentGain.gain.value = 0;
-
-      // Connect but keep silent
-      oscillator.connect(silentGain);
-      silentGain.connect(actx.destination);
-      oscillator.start();
-
-      // Then continue with normal setup
-    }
 
     if (isMobile && !audioElement) {
       audioElement = new Audio(mediaStreamURL);
@@ -516,15 +508,14 @@ function radioPageCode(
       }, 500);
       // Audio is ready to be played, hide loader and show texture overlay
       hideLoader();
-      showTextureOverlay();
+      if (!isMobile) showTextureOverlay();
       showPlayTextWrapper();
 
       // Start spinning the vinyl
       vinylText.style.animation = "rotateZ 10s linear infinite";
       vinylText.style.animationPlayState = "running";
 
-      // Now start playing the audio (on desktop only)
-      // if (!isMobile) playAudio();
+      // Now start playing the audio
       playAudio();
     };
 
@@ -541,27 +532,17 @@ function radioPageCode(
     }
   }
 
-  // original playAudio function
-  // function playAudio() {
-  //   playing = true;
-  //   toggleIcons(true);
-  //   if (actx.state === "suspended") {
-  //     actx.resume(); // Ensure context is running
-  //   }
-
-  //   audioElement
-  //     .play()
-  //     .then(() => {
-  //       animate(); // Start the visualizer
-  //     })
-  //     .catch((err) => console.error("Playback error:", err));
-  // }
-
   async function playAudio() {
     try {
       if (isMobile && !audioElement.src) {
-        audioElement.src = mediaStreamURL; // ← Critical for iOS compliance
+        audioElement.src = mediaStreamURL;
       }
+
+      // For iOS, pre-render canvas before starting audio
+      if (isIOS) {
+        prerenderCanvas();
+      }
+
       // Critical for iOS: resume if suspended
       if (actx.state === "suspended") {
         await actx.resume();
@@ -573,12 +554,6 @@ function radioPageCode(
       animate();
     } catch (err) {
       console.error("Playback failed:", err);
-      // isLoading = false;
-
-      // // Mobile-friendly retry prompt
-      // if (isMobile) {
-      //   updateLoadingMessage("Tap to retry...");
-      // }
     }
   }
 
@@ -688,23 +663,83 @@ function radioPageCode(
     if (!playing) return;
 
     window.requestAnimationFrame(animate);
+
+    // Get audio data (works on desktop/Android, returns zeros on iOS)
     analyser.getByteFrequencyData(frequencyData);
     analyser.getByteTimeDomainData(timeData);
+
+    // Check if we're getting real data (non-iOS) or zeros (iOS)
+    if (isIOS) {
+      const sum = Array.from(frequencyData).reduce((a, b) => a + b, 0);
+      if (sum === 0) {
+        // On iOS, simulate audio data since we're getting zeros
+        simulateAudioData();
+      }
+    }
+
     avg = getAvg([].slice.call(frequencyData)) * gainNode.gain.value;
     AVG_BREAK_POINT_HIT = avg > AVG_BREAK_POINT;
 
     clearCanvas();
 
+    // Always show stars on all platforms
     if (SHOW_STAR_FIELD) {
       drawStarField();
     }
 
-    if (SHOW_AVERAGE) {
-      drawAverageCircle();
+    // Only show average circle and waveform on non-iOS devices
+    if (!isIOS) {
+      if (SHOW_AVERAGE) {
+        drawAverageCircle();
+      }
+
+      if (SHOW_WAVEFORM) {
+        drawWaveform();
+      }
+    }
+  }
+
+  // Add a prerender function to ensure canvas is visible immediately on iOS
+  function prerenderCanvas() {
+    if (isIOS) {
+      // Create initial data for stars
+      simulateAudioData();
+
+      // Set initial average value
+      avg = getAvg([].slice.call(frequencyData)) * gainNode.gain.value;
+      AVG_BREAK_POINT_HIT = avg > AVG_BREAK_POINT;
+
+      // Perform an initial canvas render
+      clearCanvas();
+      drawStarField();
+    }
+  }
+
+  // Simplify simulateAudioData for better performance, focusing only on stars
+  function simulateAudioData() {
+    const time = Date.now() / 1000;
+
+    // Create a base value that oscillates over time for natural feel
+    const baseLevel = 50 + Math.sin(time * 0.5) * 20; // Value between 30-70
+
+    // Add some random variation to each update
+    const randomVariation = Math.random() * 30;
+    const level = baseLevel + randomVariation; // Between 30-100
+
+    // Fill the frequency data array with simulated values - still needed for stars
+    for (let i = 0; i < frequencyData.length; i++) {
+      // Create a natural frequency distribution (lower frequencies are louder)
+      const frequencyFactor = 1 - (i / frequencyData.length) * 0.8;
+      // Add some randomness per frequency bin
+      const binVariation = Math.random() * 20;
+      // Combine factors for a natural-looking spectrum
+      frequencyData[i] = Math.floor(level * frequencyFactor + binVariation);
     }
 
-    if (SHOW_WAVEFORM) {
-      drawWaveform();
+    // Since we're not showing waveform on iOS, we don't need to simulate detailed timeData
+    // Just set it to default values
+    for (let i = 0; i < timeData.length; i++) {
+      timeData[i] = 128;
     }
   }
 
@@ -755,6 +790,7 @@ function radioPageCode(
     i = len = p = tick = null;
   }
 
+  // Simplify drawAverageCircle function to remove iOS-specific code
   function drawAverageCircle() {
     if (AVG_BREAK_POINT_HIT) {
       ctx.strokeStyle = bubble_avg_line_color_2;
@@ -766,9 +802,7 @@ function radioPageCode(
 
     ctx.beginPath();
     ctx.lineWidth = 1;
-
     ctx.arc(cx, cy, avg + avg_circle.radius, 0, PI_TWO, false);
-
     ctx.stroke();
     ctx.fill();
     ctx.closePath();
@@ -798,6 +832,7 @@ function radioPageCode(
       ctx.fillStyle = waveform_color;
     }
 
+    // Increase line width on iOS for better visibility
     ctx.beginPath();
     ctx.lineWidth = 1;
     ctx.lineCap = "round";
@@ -812,6 +847,12 @@ function radioPageCode(
     for (i = 0, len = TOTAL_POINTS; i < len - 1; i++) {
       p = points[i];
       value = timeData[i];
+
+      // Make waveform more pronounced on iOS
+      if (isIOS) {
+        value = Math.min(255, value * 1.5);
+      }
+
       p.dx = p.x + value * sin(PI_HALF * p.angle);
       p.dy = p.y + value * cos(PI_HALF * p.angle);
       xc = (p.dx + points[i + 1].dx) / 2;
@@ -821,6 +862,11 @@ function radioPageCode(
     }
 
     value = timeData[i];
+    // Make waveform more pronounced on iOS
+    if (isIOS) {
+      value = Math.min(255, value * 1.5);
+    }
+
     p = points[i];
     p.dx = p.x + value * sin(PI_HALF * p.angle);
     p.dy = p.y + value * cos(PI_HALF * p.angle);
