@@ -1,0 +1,113 @@
+<style>
+  /* VINYL Rotation */
+  #vinyl-footer-rotator {
+    transform-origin: center;
+    will-change: transform;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  @keyframes rotateZ {
+    from {
+      transform: translate(-50%, -50%) rotateZ(var(--rotation, 0deg));
+    }
+    to {
+      transform: translate(-50%, -50%)
+        rotateZ(calc(var(--rotation, 0deg) + 360deg));
+    }
+  }
+</style>
+
+<script>
+  // RADIO BURGERFUEL SITE WIDE CODE
+  document.addEventListener("DOMContentLoaded", function () {
+    const isMobile = window.innerWidth <= 991;
+    const mediaStreamURL = "https://s3.radio.co/s9909bd65f/listen";
+    const vinylFooter = document.querySelector("#vinyl-footer-rotator");
+
+    let audioElement;
+    let isPlaying = false;
+
+    if (!isMobile) {
+      audioElement = new Audio(mediaStreamURL);
+      audioElement.crossOrigin = "anonymous";
+      audioElement.preload = "auto";
+    }
+
+    /********** API CODE **********/
+    function updateTrackInfo(id) {
+      const stationId = "s9909bd65f";
+      const trackNameElement = document.getElementById(id);
+      fetch(`https://public.radio.co/api/v2/${stationId}/track/current`)
+        .then((response) => response.json())
+        .then((data) => {
+          if (data) {
+            trackNameElement.textContent = data.data.title;
+          } else {
+            console.error("Track info not available");
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching track info:", error);
+        });
+    }
+
+    const currentPage = window.location.pathname;
+    const pageIsRadio = currentPage === "/nz/radio-burgerfuel";
+    if (pageIsRadio) {
+      radioPageCode(updateTrackInfo, audioElement, isMobile, mediaStreamURL);
+    } else {
+      if (!isMobile) footerCode(updateTrackInfo, audioElement);
+    }
+
+    // Autoplay attempt
+    const wasPlaying =
+      sessionStorage.getItem("burgerfuelRadioWasPlaying") === "true";
+    if (wasPlaying && !pageIsRadio) {
+      document.querySelector("#footer-trigger").click();
+    }
+
+    function footerCode(updateTrackInfo, audioElement) {
+      // update track info every 5s
+      updateTrackInfo("footer-title");
+      setInterval(() => updateTrackInfo("footer-title"), 5000);
+
+      document
+        .querySelector("#footer-trigger")
+        .addEventListener("click", () => {
+          if (!isPlaying) {
+            audioElement
+              .play()
+              .then(() => {
+                playFooterVinyl();
+              })
+              .catch((error) => {
+                console.error("Error playing radio stream:", error);
+              });
+          } else {
+            audioElement.pause();
+            pauseFooterVinyl();
+          }
+        });
+    }
+    function playFooterVinyl() {
+      isPlaying = true;
+      console.log("Playing footer vinyl", vinylFooter);
+      // Start spinning the vinyl
+      vinylFooter.style.animation = "rotateZ 10s linear infinite";
+      vinylFooter.style.animationPlayState = "running";
+      sessionStorage.setItem("burgerfuelRadioWasPlaying", "true");
+    }
+
+    function pauseFooterVinyl() {
+      isPlaying = false;
+      // Pause the vinyl rotation
+      const computedStyle = window.getComputedStyle(vinylFooter);
+      const currentRotation =
+        computedStyle.getPropertyValue("--rotation") || "0deg";
+      vinylFooter.style.setProperty("--rotation", currentRotation);
+      vinylFooter.style.animationPlayState = "paused";
+      sessionStorage.setItem("burgerfuelRadioWasPlaying", "false");
+    }
+  });
+</script>
