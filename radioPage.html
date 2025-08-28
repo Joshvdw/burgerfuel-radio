@@ -125,7 +125,7 @@
     isMobile,
     mediaStreamURL
   ) {
-  	// reset autoplay cookies
+    // reset autoplay cookies
     sessionStorage.setItem("burgerfuelRadioWasPlaying", "false");
 
     // Inject radio page specific CSS
@@ -240,6 +240,27 @@
     const pauseIcons = document.querySelectorAll(".pause-icon");
     const soundBars = document.querySelectorAll(".bar");
 
+    function showPlayTextWrapper() {
+      // Set initial styles
+      playTextWrapper.style.display = "flex";
+      playTextWrapper.style.transform = "translateX(-100%)";
+      playTextWrapper.style.transition =
+        "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
+      playTextWrapper.style.willChange = "transform"; // Optimize for animations
+
+      // Force a reflow to ensure the initial state is rendered
+      playTextWrapper.offsetHeight;
+
+      // Trigger the slide-in
+      requestAnimationFrame(() => {
+        playTextWrapper.style.transform = "translateX(0)";
+      });
+    }
+
+    function hidePlayTextWrapper() {
+      playTextWrapper.style.display = "none";
+    }
+
     // hide wrapper on launch
     hidePlayTextWrapper();
 
@@ -259,7 +280,9 @@
     const articleWrapper = document.querySelector("#articleWrapper");
     const musicSendMusicBlackCover = document.querySelector("#blackCover2");
     const articleBlackCover = document.querySelector("#blackCover");
-    const closeSendMusicModalBtn = document.querySelector("#closeSendMusicModal");
+    const closeSendMusicModalBtn = document.querySelector(
+      "#closeSendMusicModal"
+    );
     const loadingAnimation = document.querySelector("#loadingAnimation");
     const closeArticleModalsBtns = document.querySelectorAll(
       ".button.is-close.is-article"
@@ -273,7 +296,7 @@
 
         // add open modal class for mobile
         setTimeout(() => {
-          document.body.classList.add('modal-open');
+          document.body.classList.add("modal-open");
         }, 300);
 
         modals.forEach((modal) => {
@@ -296,7 +319,7 @@
     });
 
     musicSendMusicBlackCover.addEventListener("click", () => {
-     	document.body.classList.remove('modal-open');
+      document.body.classList.remove("modal-open");
       closeSendMusicModalBtn.click();
     });
 
@@ -313,18 +336,18 @@
     });
 
     function closeAllArticleModals() {
-      document.body.classList.remove('modal-open');
+      document.body.classList.remove("modal-open");
       closeArticleModalsBtns.forEach((resetBtn) => {
         resetBtn.click();
       });
     }
 
     // remove scroll blocking on clise btn
-    const closeBtns = document.querySelectorAll('.button.is-close');
-    closeBtns.forEach(btn => {
-        btn.addEventListener("click", () => {
-     			document.body.classList.remove('modal-open');
-    		});
+    const closeBtns = document.querySelectorAll(".button.is-close");
+    closeBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.body.classList.remove("modal-open");
+      });
     });
 
     // init sessions swiper
@@ -403,7 +426,10 @@
     });
 
     // Check if the device is iOS or Safari
-  	const isIOS = (/iPad|iPhone|iPod/.test(navigator.userAgent) || (/^((?!chrome|android).)*safari/i.test(navigator.userAgent))) && !window.MSStream;
+    const isIOS =
+      (/iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        /^((?!chrome|android).)*safari/i.test(navigator.userAgent)) &&
+      !window.MSStream;
 
     // Remove purple overlay on ios to prevent bug
     if (isIOS) {
@@ -495,8 +521,11 @@
     }
 
     // initialize visualiser on load
-    if (document.readyState === "complete" || document.readyState === "interactive") {
-    	initialize();
+    if (
+      document.readyState === "complete" ||
+      document.readyState === "interactive"
+    ) {
+      initialize();
     } else {
       document.addEventListener("DOMContentLoaded", initialize);
     }
@@ -601,7 +630,7 @@
       }
       */
 
-     /* old dynamic version */
+      /* old dynamic version */
 
       // dynamic handleReady trigger function after loading
       /*
@@ -628,19 +657,23 @@
         audioElement.addEventListener('canplaythrough', handleReadyOnce, { once: true });
         audioElement.addEventListener('loadeddata', handleReadyOnce, { once: true });
       }
-    }
-    */
+      */
 
-    	// NEW SIMPLE VERSION
+      // NEW SIMPLE VERSION
       const mobileReadyTimeout = setTimeout(() => {
-        audioElement.removeEventListener('canplaythrough', handleReady);
+        audioElement.removeEventListener("canplaythrough", handleReady);
         handleReady(); // Force ready after 3s
       }, 2000);
 
-      audioElement.addEventListener('canplaythrough', () => {
-        clearTimeout(mobileReadyTimeout);
-        handleReady();
-      }, { once: true });
+      audioElement.addEventListener(
+        "canplaythrough",
+        () => {
+          clearTimeout(mobileReadyTimeout);
+          handleReady();
+        },
+        { once: true }
+      );
+    }
 
     async function playAudio() {
       try {
@@ -704,27 +737,6 @@
         updateLoadingMessage(messages[index]);
         index = (index + 1) % messages.length;
       }, 1000);
-    }
-
-    function showPlayTextWrapper() {
-      // Set initial styles
-      playTextWrapper.style.display = "flex";
-      playTextWrapper.style.transform = "translateX(-100%)";
-      playTextWrapper.style.transition =
-        "transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)";
-      playTextWrapper.style.willChange = "transform"; // Optimize for animations
-
-      // Force a reflow to ensure the initial state is rendered
-      playTextWrapper.offsetHeight;
-
-      // Trigger the slide-in
-      requestAnimationFrame(() => {
-        playTextWrapper.style.transform = "translateX(0)";
-      });
-    }
-
-    function hidePlayTextWrapper() {
-      playTextWrapper.style.display = "none";
     }
 
     function toggleIcons(isPlay) {
@@ -1139,5 +1151,4 @@
       }
     }
   }
-}
 </script>
